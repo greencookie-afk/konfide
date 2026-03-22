@@ -1,36 +1,32 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Konfide Web Application
 
-## Getting Started
+**Konfide** connects individuals with compassionate peer listeners who have lived through similar experiences. 
 
-First, run the development server:
+## 🏗️ Architecture
+- **Framework**: Next.js 15 (App Router)
+- **Styling**: Tailwind CSS v4 + Amber Hearth Theme
+- **Database**: PostgreSQL (via Prisma ORM)
+- **Real-time**: PeerJS (for completely free 1-on-1 audio/video calls)
+- **Payments**: Stripe Connect (for holding escrows & payouts)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 📂 Project Structure
+This repository is pre-scaffolded so you can simply drop your Stitch UI code into the respective folders section by section!
+- `src/app/page.tsx` \u2192 The main Landing Page.
+- `src/app/(user)/explore/page.tsx` \u2192 The Browse Listeners page for regular users.
+- `src/app/(listener)/dashboard/page.tsx` \u2192 The Listener Dashboard (Stats, Earnings, Timings).
+- `src/app/(admin)/dashboard/page.tsx` \u2192 The Admin Moderation Dashboard.
+- `src/app/chat/[sessionId]/page.tsx` \u2192 The unified Telegram-style real-time chat room.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## \ud83d\ude80 Getting Started
+1. Start the development server (if not already running):
+   ```bash
+   npm run dev
+   ```
+2. Initialize your database:
+   Update `DATABASE_URL` in your `.env` file once you create a Postgres database (e.g., Supabase/Vercel) and run:
+   ```bash
+   npx prisma db push
+   ```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### \ud83c\udfa8 Working on the UI
+Open any of the files mentioned in the **Project Structure** section above and begin replacing the placeholder code with your exported UI screens! The Amber Hearth color palette is already injected into `src/app/globals.css`.
