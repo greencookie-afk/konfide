@@ -1,40 +1,48 @@
 @import "tailwindcss";
 
 @theme {
-  /* Amber Hearth Palette */
-  --color-primary: #8a4100;
-  --color-primary-container: #ffdcc3;
-  --color-on-primary: #ffffff;
-  --color-on-primary-container: #2c1100;
+  /* Konfide — Bright Golden Yellow Palette */
+  --color-primary: #FFBF00;
+  --color-primary-container: #FFF0B3;
+  --color-on-primary: #2E2000;
+  --color-on-primary-container: #2E2000;
   
-  --color-secondary: #745944;
-  --color-secondary-container: #ffdcbf;
+  --color-secondary: #6E5C3B;
+  --color-secondary-container: #F9DEB7;
   --color-on-secondary: #ffffff;
-  --color-on-secondary-container: #281807;
+  --color-on-secondary-container: #271900;
   
-  --color-tertiary: #58633a;
-  --color-tertiary-container: #dce8b4;
+  --color-tertiary: #4E6700;
+  --color-tertiary-container: #D0F079;
   --color-on-tertiary: #ffffff;
-  --color-on-tertiary-container: #161e01;
+  --color-on-tertiary-container: #151F00;
 
-  --color-surface: #fffbff;
-  --color-surface-dim: #e6d7d0;
+  --color-surface: #FFFBF5;
+  --color-surface-dim: #E5DDD4;
   --color-surface-container-lowest: #ffffff;
-  --color-surface-container-low: #fdf1ea;
-  --color-surface-container: #f7ebe4;
-  --color-surface-container-high: #f1e5de;
-  --color-surface-container-highest: #ebdfd8;
+  --color-surface-container-low: #FFF6EA;
+  --color-surface-container: #FBF0E2;
+  --color-surface-container-high: #F5EADB;
+  --color-surface-container-highest: #EFE4D5;
   
-  --color-on-surface: #221a15;
-  --color-on-surface-variant: #51443b;
+  --color-on-surface: #1D1B16;
+  --color-on-surface-variant: #4D4639;
 
-  --font-headline: "Plus Jakarta Sans", sans-serif;
-  --font-body: "Plus Jakarta Sans", sans-serif;
-  --font-label: "Plus Jakarta Sans", sans-serif;
+  --font-headline: var(--font-plus-jakarta-sans), sans-serif;
+  --font-body: var(--font-plus-jakarta-sans), sans-serif;
+  --font-label: var(--font-plus-jakarta-sans), sans-serif;
 }
 
+html,
 body {
   font-family: var(--font-body), sans-serif;
   background-color: var(--color-surface);
   color: var(--color-on-surface);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
 }

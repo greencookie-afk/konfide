@@ -1,4 +1,8 @@
-export default function ListenerApplicationPage() {
+import { requireUser } from "@/lib/auth/server";
+
+export default async function ListenerApplicationPage() {
+  await requireUser(["LISTENER"]);
+
   return (
     <div className="min-h-screen bg-surface p-12">
       <h1 className="text-4xl font-headline font-bold text-on-surface mb-6">Listener Application</h1>
