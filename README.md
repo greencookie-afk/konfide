@@ -1,32 +1,59 @@
-# Konfide Web Application
+# Konfide
 
-**Konfide** connects individuals with compassionate peer listeners who have lived through similar experiences. 
+A peer-to-peer mental health support platform where people connect with empathetic listeners who have real-life experience.
 
-## 🏗️ Architecture
-- **Framework**: Next.js 15 (App Router)
-- **Styling**: Tailwind CSS v4 + Amber Hearth Theme
-- **Database**: PostgreSQL (via Prisma ORM)
-- **Real-time**: PeerJS (for completely free 1-on-1 audio/video calls)
-- **Payments**: Stripe Connect (for holding escrows & payouts)
+## Tech Stack
 
-## 📂 Project Structure
-This repository is pre-scaffolded so you can simply drop your Stitch UI code into the respective folders section by section!
-- `src/app/page.tsx` \u2192 The main Landing Page.
-- `src/app/(user)/explore/page.tsx` \u2192 The Browse Listeners page for regular users.
-- `src/app/(listener)/dashboard/page.tsx` \u2192 The Listener Dashboard (Stats, Earnings, Timings).
-- `src/app/(admin)/dashboard/page.tsx` \u2192 The Admin Moderation Dashboard.
-- `src/app/chat/[sessionId]/page.tsx` \u2192 The unified Telegram-style real-time chat room.
+| Layer | Technology |
+|-------|-----------|
+| Framework | Next.js 16 (App Router) |
+| Styling | Tailwind CSS v4 |
+| Database | PostgreSQL + Prisma |
+| Auth | NextAuth.js |
+| Real-time Chat | Socket.io |
+| Voice/Video | PeerJS (WebRTC) |
+| Payments | Stripe Connect (Escrow) |
 
-## \ud83d\ude80 Getting Started
-1. Start the development server (if not already running):
-   ```bash
-   npm run dev
-   ```
-2. Initialize your database:
-   Update `DATABASE_URL` in your `.env` file once you create a Postgres database (e.g., Supabase/Vercel) and run:
-   ```bash
-   npx prisma db push
-   ```
+## Project Structure
 
-### \ud83c\udfa8 Working on the UI
-Open any of the files mentioned in the **Project Structure** section above and begin replacing the placeholder code with your exported UI screens! The Amber Hearth color palette is already injected into `src/app/globals.css`.
+```
+src/
+├── app/
+│   ├── page.tsx                        # Landing page
+│   ├── (user)/
+│   │   └── explore/page.tsx            # Browse & book listeners
+│   ├── (listener)/
+│   │   └── dashboard/page.tsx          # Listener stats, earnings, availability
+│   ├── (admin)/
+│   │   └── dashboard/page.tsx          # Admin moderation panel
+│   └── chat/[sessionId]/page.tsx       # Live session chat room
+├── components/
+│   ├── ui/                             # Reusable UI primitives
+│   └── shared/                         # Shared layout components
+├── lib/                                # Utility functions & configs
+├── hooks/                              # Custom React hooks
+├── actions/                            # Server actions
+├── store/                              # Client state management
+└── types/                              # TypeScript type definitions
+```
+
+## Development
+
+```bash
+npm install
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+## Database
+
+Update `DATABASE_URL` in `.env`, then:
+
+```bash
+npx prisma db push
+```
+
+## License
+
+Private — All rights reserved.
