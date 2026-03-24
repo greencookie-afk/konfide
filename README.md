@@ -6,7 +6,7 @@ A peer-to-peer mental health support platform where people connect with empathet
 
 | Layer | Technology |
 |-------|-----------|
-| Framework | Next.js 16 (App Router) |
+| Framework | Next.js (App Router) |
 | Styling | Tailwind CSS v4 |
 | Database | PostgreSQL + Prisma |
 | Auth | NextAuth.js |
@@ -14,28 +14,44 @@ A peer-to-peer mental health support platform where people connect with empathet
 | Voice/Video | PeerJS (WebRTC) |
 | Payments | Stripe Connect (Escrow) |
 
-## Project Structure
+## Routes
 
-```
-src/
-├── app/
-│   ├── page.tsx                        # Landing page
-│   ├── (user)/
-│   │   └── explore/page.tsx            # Browse & book listeners
-│   ├── (listener)/
-│   │   └── dashboard/page.tsx          # Listener stats, earnings, availability
-│   ├── (admin)/
-│   │   └── dashboard/page.tsx          # Admin moderation panel
-│   └── chat/[sessionId]/page.tsx       # Live session chat room
-├── components/
-│   ├── ui/                             # Reusable UI primitives
-│   └── shared/                         # Shared layout components
-├── lib/                                # Utility functions & configs
-├── hooks/                              # Custom React hooks
-├── actions/                            # Server actions
-├── store/                              # Client state management
-└── types/                              # TypeScript type definitions
-```
+### Public
+| Route | Page |
+|-------|------|
+| `/` | Landing page |
+| `/auth` | Sign in / Sign up |
+| `/join` | Become a Listener (info) |
+| `/join/apply` | Listener application form |
+
+### User (authenticated)
+| Route | Page |
+|-------|------|
+| `/explore` | Browse & filter listeners |
+| `/explore/[listenerId]` | Listener profile |
+| `/explore/[listenerId]/book` | Book a session |
+| `/sessions` | My booked sessions |
+| `/sessions/[sessionId]/review` | Post-session review |
+
+### Listener (authenticated)
+| Route | Page |
+|-------|------|
+| `/dashboard` | Stats, earnings, payouts |
+| `/sessions` | Upcoming bookings |
+| `/availability` | Set weekly schedule |
+
+### Chat
+| Route | Page |
+|-------|------|
+| `/chat/[sessionId]` | Live session (text, voice, video) |
+
+### Admin
+| Route | Page |
+|-------|------|
+| `/admin/dashboard` | Platform overview |
+| `/admin/users` | User management |
+| `/admin/listeners` | Listener approvals |
+| `/admin/analytics` | Revenue & analytics |
 
 ## Development
 
