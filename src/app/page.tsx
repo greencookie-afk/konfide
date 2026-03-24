@@ -12,24 +12,23 @@ export default function Home() {
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-12 w-full">
-          {/* Navigation Placeholders for You */}
           <Link href="/explore" className="p-6 bg-surface rounded-xl hover:bg-surface-container-highest transition-colors border border-on-surface/5">
-            <h3 className="font-bold text-lg">Browse Listeners \u2192</h3>
+            <h3 className="font-bold text-lg">Browse Listeners →</h3>
             <p className="text-sm text-on-surface-variant mt-2">Find your perfect match</p>
           </Link>
 
-          <Link href="/dashboard" className="p-6 bg-surface rounded-xl hover:bg-surface-container-highest transition-colors border border-on-surface/5">
-            <h3 className="font-bold text-lg">Listener Dashboard \u2192</h3>
+          <Link href="/listener/dashboard" className="p-6 bg-surface rounded-xl hover:bg-surface-container-highest transition-colors border border-on-surface/5">
+            <h3 className="font-bold text-lg">Listener Dashboard →</h3>
             <p className="text-sm text-on-surface-variant mt-2">Manage your sessions</p>
           </Link>
 
-          <Link href="/chat/123" className="p-6 bg-surface rounded-xl hover:bg-surface-container-highest transition-colors border border-on-surface/5">
-            <h3 className="font-bold text-lg">Chat Room \u2192</h3>
+          <Link href="/chat/demo" className="p-6 bg-surface rounded-xl hover:bg-surface-container-highest transition-colors border border-on-surface/5">
+            <h3 className="font-bold text-lg">Chat Room →</h3>
             <p className="text-sm text-on-surface-variant mt-2">Enter a live session</p>
           </Link>
 
-          <Link href="/admin" className="p-6 bg-surface rounded-xl hover:bg-surface-container-highest transition-colors border border-on-surface/5">
-            <h3 className="font-bold text-lg">Admin Panel \u2192</h3>
+          <Link href="/admin/dashboard" className="p-6 bg-surface rounded-xl hover:bg-surface-container-highest transition-colors border border-on-surface/5">
+            <h3 className="font-bold text-lg">Admin Panel →</h3>
             <p className="text-sm text-on-surface-variant mt-2">Platform moderation</p>
           </Link>
         </div>

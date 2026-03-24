@@ -36,9 +36,9 @@ A peer-to-peer mental health support platform where people connect with empathet
 ### Listener (authenticated)
 | Route | Page |
 |-------|------|
-| `/dashboard` | Stats, earnings, payouts |
-| `/sessions` | Upcoming bookings |
-| `/availability` | Set weekly schedule |
+| `/listener/dashboard` | Stats, earnings, payouts |
+| `/listener/sessions` | Upcoming bookings |
+| `/listener/availability` | Set weekly schedule |
 
 ### Chat
 | Route | Page |
