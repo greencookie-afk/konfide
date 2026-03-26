@@ -1,10 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import Link from "next/link";
-import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import Navbar from "@/components/shared/Navbar";
 
 type AuthFormProps = {
   initialMode: "signin" | "signup";
@@ -30,20 +27,16 @@ export default function AuthForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const urlError = initialError;
   const debugDetails = initialDetails;
-  const postAuthDestination =
-    role === "listen"
-      ? isSignUp
-        ? "/join/apply"
-        : "/listener/dashboard"
-      : "/explore";
+  const postAuthDestination = role === "listen" ? "/listener/dashboard" : "/explore";
   const postAuthHint =
     role === "listen"
       ? isSignUp
-        ? "Listener signup continues to the application form."
+        ? "Listener signup opens your dashboard so you can finish your profile and availability."
         : "Listener sign-in opens your dashboard."
       : isSignUp
         ? "Talker signup takes you straight to explore."
         : "Talker sign-in opens explore.";
+  const googleAuthHref = `/api/auth/google/start?mode=${isSignUp ? "signup" : "signin"}&role=${role}`;
 
   const oauthError =
     urlError === "google_not_configured"
@@ -100,18 +93,18 @@ export default function AuthForm({
   const roleCopy =
     role === "listen"
       ? {
-          title: "Become a trusted listener.",
-          description: "Create your listener account to apply, complete onboarding, and start supporting others.",
+          title: "Build your listener workspace.",
+          description: "Create a listener account, set your profile, choose your availability, and publish only when you are ready.",
           signUpHeading: "Create your listener account",
-          signUpDescription: "Apply to join Konfide and start your onboarding journey.",
+          signUpDescription: "Start your listener dashboard. Profile details and availability can be added after signup.",
           signInHeading: "Welcome back, listener",
-          signInDescription: "Sign in to manage applications, sessions, and availability.",
+          signInDescription: "Sign in to manage your dashboard, sessions, and availability.",
           submitSignUp: "Create Listener Account",
           submitSignIn: "Sign In as Listener",
         }
       : {
           title: "Find your perfect listener.",
-          description: "A safe, professional space for meaningful human connection and emotional support.",
+          description: "Browse real listener profiles, pick from saved availability, and keep every confirmed session in one place.",
           signUpHeading: "Create your account",
           signUpDescription: "Start your journey toward meaningful connection.",
           signInHeading: "Welcome back",
@@ -159,11 +152,8 @@ export default function AuthForm({
   };
 
   return (
-    <div className="min-h-screen bg-surface overflow-x-hidden">
-      <Navbar />
-
-      <main className="pt-20">
-        <div className="min-h-[calc(100svh-5rem)] lg:flex">
+    <main className="pt-20">
+      <div className="min-h-[calc(100svh-5rem)] lg:flex">
           <section className="hidden lg:flex lg:w-5/12 xl:w-1/2 items-center justify-center p-8 xl:p-12 relative overflow-hidden bg-surface-container-low border-r border-on-surface/5">
             <div className="absolute top-[20%] right-[-10%] w-72 h-72 rounded-full bg-primary-container/20 blur-[100px]" />
             <div className="absolute bottom-[10%] left-[-5%] w-48 h-48 rounded-full bg-secondary-container/10 blur-[80px]" />
@@ -172,16 +162,30 @@ export default function AuthForm({
               <h1 className="text-3xl xl:text-4xl font-bold text-on-surface tracking-tight leading-[1.08] mb-3">
                 {roleCopy.title}
               </h1>
-              <p className="text-on-surface-variant text-base leading-relaxed max-w-xs">
+              <p className="max-w-sm text-base leading-relaxed text-on-surface-variant">
                 {roleCopy.description}
               </p>
-              <div className="mt-6 flex gap-3 items-center">
-                <div className="flex -space-x-3">
-                  <Image src="/images/portrait_one_1774343011664.png" width={32} height={32} alt="User" className="w-8 h-8 rounded-full border-2 border-surface object-cover bg-surface-container-high" />
-                  <Image src="/images/portrait_two_1774343033404.png" width={32} height={32} alt="User" className="w-8 h-8 rounded-full border-2 border-surface object-cover bg-surface-container-high" />
-                  <Image src="/images/portrait_four_1774343074850.png" width={32} height={32} alt="User" className="w-8 h-8 rounded-full border-2 border-surface object-cover bg-surface-container-high" />
+              <div className="mt-8 space-y-3">
+                <div className="rounded-[18px] border border-on-surface/6 bg-surface/80 px-4 py-4">
+                  <p className="text-sm font-semibold text-on-surface">
+                    {role === "listen" ? "Create the account first" : "Browse only what is live"}
+                  </p>
+                  <p className="mt-1 text-sm leading-6 text-on-surface-variant">
+                    {role === "listen"
+                      ? "After signup, add your public profile and weekly availability from the dashboard."
+                      : "Profiles only appear once a listener has published and added real availability."}
+                  </p>
                 </div>
-                <span className="text-xs font-medium text-on-surface-variant">Joined by 2,000+ others today</span>
+                <div className="rounded-[18px] border border-on-surface/6 bg-surface/80 px-4 py-4">
+                  <p className="text-sm font-semibold text-on-surface">
+                    {role === "listen" ? "Publish when ready" : "Book from actual time slots"}
+                  </p>
+                  <p className="mt-1 text-sm leading-6 text-on-surface-variant">
+                    {role === "listen"
+                      ? "Nothing is exposed to users until you publish your profile and turn on bookings."
+                      : "Booking options are generated from saved listener availability, not placeholder schedules."}
+                  </p>
+                </div>
               </div>
             </div>
           </section>
@@ -327,8 +331,8 @@ export default function AuthForm({
                     </div>
                   </div>
 
-                  <Link
-                    href={`/api/auth/google/start?mode=${isSignUp ? "signup" : "signin"}&role=${role}`}
+                  <a
+                    href={googleAuthHref}
                     className="w-full flex items-center justify-center gap-2 bg-surface-container hover:bg-surface-container-high border border-on-surface/10 py-2.5 rounded-none font-bold text-sm text-on-surface transition-colors duration-200"
                   >
                     <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -338,7 +342,7 @@ export default function AuthForm({
                       <path d="M12 5.38c1.62 0 3.06.56 4.21 1.66l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
                     </svg>
                     Continue with Google
-                  </Link>
+                  </a>
 
                   <p className="text-center text-[11px] leading-relaxed text-on-surface-variant">
                     {postAuthHint} You&apos;ll continue to <span className="font-semibold text-on-surface">{postAuthDestination}</span>.
@@ -358,8 +362,7 @@ export default function AuthForm({
               </div>
             </div>
           </section>
-        </div>
-      </main>
-    </div>
+      </div>
+    </main>
   );
 }

@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  serverExternalPackages: ["@prisma/adapter-pg"],
+  experimental: {
+    turbopackFileSystemCacheForBuild: true,
+  },
   images: {
     remotePatterns: [
       {

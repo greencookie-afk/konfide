@@ -1,9 +1,20 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
-const plusJakartaSans = Plus_Jakarta_Sans({
-  subsets: ["latin"],
+const plusJakartaSans = localFont({
+  src: [
+    {
+      path: "./fonts/PlusJakartaSans-Latin-Variable.woff2",
+      weight: "200 800",
+      style: "normal",
+    },
+    {
+      path: "./fonts/PlusJakartaSans-Latin-Italic-Variable.woff2",
+      weight: "200 800",
+      style: "italic",
+    },
+  ],
   variable: "--font-plus-jakarta-sans",
   display: "swap",
 });
@@ -19,8 +30,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${plusJakartaSans.variable} font-body antialiased bg-surface text-on-surface`}>
+    <html lang="en" className={plusJakartaSans.variable}>
+      <body className="font-body antialiased bg-surface text-on-surface">
         {children}
       </body>
     </html>

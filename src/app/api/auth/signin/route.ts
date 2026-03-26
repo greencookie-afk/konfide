@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { Prisma } from "@/generated/prisma/client";
-import { enforceRateLimit, getRequestFingerprint } from "@/lib/auth/rate-limit";
-import { signInUser } from "@/lib/auth/shared";
+import { Prisma } from "@/generated/prisma";
+import { enforceRateLimit, getRequestFingerprint } from "@/server/auth/rate-limit";
+import { signInUser } from "@/server/auth/service";
 
 function isSchemaMismatchError(error: unknown) {
   return (

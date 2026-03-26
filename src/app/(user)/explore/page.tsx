@@ -1,13 +1,42 @@
-export default function ExploreListenersPage() {
+import Footer from "@/components/shared/Footer";
+import Navbar from "@/components/shared/Navbar";
+import ExploreCatalog from "@/features/explore/components/ExploreCatalog";
+import { getBrowseListeners, normalizeBrowseListenersInput } from "@/server/listeners/service";
+
+type ExplorePageSearchParams = Promise<{
+  page?: string | string[];
+  q?: string | string[];
+  topic?: string | string[];
+  sort?: string | string[];
+}>;
+
+function readParam(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+export default async function ExploreListenersPage({
+  searchParams,
+}: {
+  searchParams: ExplorePageSearchParams;
+}) {
+  const params = await searchParams;
+  const filters = normalizeBrowseListenersInput({
+    page: readParam(params.page) ?? null,
+    q: readParam(params.q) ?? null,
+    topic: readParam(params.topic) ?? null,
+    sort: readParam(params.sort) ?? null,
+  });
+  const browseResult = await getBrowseListeners(filters);
+
   return (
-    <div className="min-h-screen bg-surface p-12">
-      <h1 className="text-4xl font-headline font-bold text-on-surface mb-6">Browse Listeners</h1>
-      <p className="text-on-surface-variant mb-12">Filter and find the perfect listener for your needs.</p>
-      
-      {/* TODO: Paste Stitch "Browse Listeners" UI Code Here */}
-      <div className="p-8 border-2 border-dashed border-primary/20 rounded-2xl bg-surface-container-low text-center">
-        <p className="text-primary font-medium">Paste your Stitch UI for the Browse Listeners screen here</p>
-      </div>
+    <div className="min-h-screen bg-surface text-on-surface">
+      <Navbar />
+
+      <main className="mx-auto max-w-7xl px-4 pb-20 pt-28 sm:px-6 md:px-8">
+        <ExploreCatalog browseResult={browseResult} />
+      </main>
+
+      <Footer />
     </div>
   );
 }

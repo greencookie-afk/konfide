@@ -1,4 +1,4 @@
-import { requireUser } from "@/lib/auth/server";
+import { requireUser } from "@/server/auth/server";
 
 export default async function ExploreLayout({
   children,

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { startGoogleAuth } from "@/lib/auth/google";
+import { startGoogleAuth } from "@/server/auth/google";
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);

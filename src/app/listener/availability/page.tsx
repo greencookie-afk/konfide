@@ -1,13 +1,22 @@
-export default function AvailabilitySettingsPage() {
-  return (
-    <div className="min-h-screen bg-surface p-12">
-      <h1 className="text-4xl font-headline font-bold text-on-surface mb-6">Availability Settings</h1>
-      <p className="text-on-surface-variant mb-12">Set your weekly schedule so users can book you.</p>
+import AvailabilityEditor from "@/features/listener/components/AvailabilityEditor";
+import { requireUser } from "@/server/auth/server";
+import { getListenerAvailabilityEditor } from "@/server/availability/service";
 
-      {/* TODO: Replace with Stitch "Availability Settings - Active State Corrected" screen */}
-      <div className="p-8 border-2 border-dashed border-primary/20 rounded-2xl bg-surface-container-low text-center">
-        <p className="text-primary font-medium">Availability / Timings UI goes here</p>
-      </div>
+export default async function AvailabilitySettingsPage() {
+  const user = await requireUser(["LISTENER"]);
+  const availability = await getListenerAvailabilityEditor(user.id);
+
+  return (
+    <div className="space-y-8">
+      <section>
+        <p className="mb-2 text-xs font-bold uppercase tracking-[0.24em] text-primary">Availability</p>
+        <h1 className="text-3xl font-bold tracking-tight md:text-4xl">Availability settings</h1>
+        <p className="mt-3 max-w-2xl text-sm leading-6 text-on-surface-variant md:text-base">
+          Manage your weekly booking schedule here. Users only see the time slots you save on this page.
+        </p>
+      </section>
+
+      <AvailabilityEditor initialData={availability} />
     </div>
   );
 }

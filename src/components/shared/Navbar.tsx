@@ -1,153 +1,100 @@
-"use client";
-
-import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { Bell } from "lucide-react";
+import type { UserRole } from "@/generated/prisma";
+import NavbarLinks, { type NavbarLinkItem } from "@/components/shared/NavbarLinks";
+import SignOutButton from "@/features/account/components/SignOutButton";
+import { getCurrentUser } from "@/server/auth/server";
 
-type SessionUser = {
-  id: string;
-  name: string | null;
-  email: string;
-  role: "TALKER" | "LISTENER" | "ADMIN";
-};
+function getNavLinks(role: UserRole | undefined): NavbarLinkItem[] {
+  if (role === "TALKER") {
+    return [
+      { href: "/explore", label: "Explore" },
+      { href: "/sessions", label: "Sessions" },
+      { href: "/account", label: "My Account" },
+    ];
+  }
 
-export default function Navbar() {
-  const router = useRouter();
-  const pathname = usePathname();
-  const [user, setUser] = useState<SessionUser | null>(null);
-  const [isLoadingSession, setIsLoadingSession] = useState(true);
-  const [isSigningOut, setIsSigningOut] = useState(false);
+  if (role === "LISTENER") {
+    return [
+      { href: "/listener/sessions", label: "Sessions" },
+      { href: "/listener/dashboard", label: "My Dashboard" },
+      { href: "/listener/availability", label: "Availability" },
+    ];
+  }
 
-  const linkClass = (href: string) =>
-    pathname === href
-      ? "text-on-surface border-b-2 border-primary pb-1 text-lg tracking-tight"
-      : "text-on-surface/60 hover:text-on-surface transition-colors text-lg tracking-tight";
+  return [
+    { href: "/", label: "Home" },
+    { href: "/#how-it-works", label: "How it works", isStatic: true },
+    { href: "/join", label: "Become a listener" },
+  ];
+}
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadSession() {
-      try {
-        const response = await fetch("/api/auth/session", {
-          cache: "no-store",
-          credentials: "include",
-        });
-
-        if (!response.ok) {
-          if (!cancelled) {
-            setUser(null);
-          }
-          return;
-        }
-
-        const payload = (await response.json()) as { user: SessionUser | null };
-
-        if (!cancelled) {
-          setUser(payload.user);
-        }
-      } catch {
-        if (!cancelled) {
-          setUser(null);
-        }
-      } finally {
-        if (!cancelled) {
-          setIsLoadingSession(false);
-        }
-      }
-    }
-
-    loadSession();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [pathname]);
-
-  const primaryHref =
-    isLoadingSession
-      ? null
-      : user?.role === "LISTENER"
-      ? "/listener/dashboard"
-      : user?.role === "ADMIN"
-        ? "/admin/dashboard"
-        : user
-          ? "/explore"
-          : "/auth?mode=signup&role=talk";
-
-  const primaryLabel =
-    isLoadingSession
-      ? "Loading"
-      : user?.role === "LISTENER"
-      ? "Dashboard"
-      : user?.role === "ADMIN"
-        ? "Admin"
-        : user
-          ? "Explore"
-          : "Sign Up";
-
-  const handleSignOut = async () => {
-    setIsSigningOut(true);
-
-    try {
-      await fetch("/api/auth/session", {
-        method: "DELETE",
-      });
-      setUser(null);
-      router.push("/auth?mode=signin&role=talk");
-      router.refresh();
-    } finally {
-      setIsSigningOut(false);
-    }
-  };
+export default async function Navbar() {
+  const user = await getCurrentUser();
+  const isAuthenticatedUser = Boolean(user && user.role !== "ADMIN");
+  const navLinks = getNavLinks(user?.role);
+  const primaryHref = user?.role === "LISTENER" ? "/listener/profile" : user ? null : "/auth?mode=signup&role=talk";
+  const primaryLabel = user?.role === "LISTENER" ? "Edit Profile" : user ? null : "Sign Up";
+  const userInitial = (user?.name || user?.email || "K").charAt(0).toUpperCase();
+  const accountHref = user?.role === "LISTENER" ? "/listener/dashboard" : "/account";
+  const signOutHref = user?.role === "LISTENER" ? "/auth?mode=signin&role=listen" : "/auth?mode=signin&role=talk";
 
   return (
-    <nav className="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-md">
-      <div className="flex justify-between items-center max-w-7xl mx-auto h-20 px-4 sm:px-6 md:px-8 gap-4">
-        <Link href="/" className="text-xl sm:text-2xl font-bold tracking-tighter text-on-surface shrink-0">
+    <nav className="fixed top-0 z-50 w-full bg-surface/80 backdrop-blur-md">
+      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 md:px-8">
+        <Link href="/" className="shrink-0 text-xl font-bold tracking-tighter text-on-surface sm:text-2xl">
           Konfide
         </Link>
 
-        <div className="hidden md:flex items-center gap-10">
-          <Link href="/" className={linkClass("/")}>
-            Home
-          </Link>
-          <Link href="/#how-it-works" className="text-on-surface/60 hover:text-on-surface transition-colors text-lg tracking-tight">
-            How it works
-          </Link>
-          <Link href="/join" className={linkClass("/join")}>
-            Become a listener
-          </Link>
-          <Link href="/#faq" className="text-on-surface/60 hover:text-on-surface transition-colors text-lg tracking-tight">
-            FAQ
-          </Link>
+        <div className="hidden md:flex">
+          <NavbarLinks items={navLinks} />
         </div>
 
-        <div className="flex items-center gap-3 sm:gap-4 shrink-0">
-          {!isLoadingSession && user ? (
-            <button
-              type="button"
-              onClick={handleSignOut}
-              disabled={isSigningOut}
-              className="text-sm md:text-base text-on-surface/70 hover:text-on-surface transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSigningOut ? "Signing out..." : "Sign Out"}
-            </button>
+        <div className="flex shrink-0 items-center gap-3 sm:gap-4">
+          {isAuthenticatedUser ? (
+            <>
+              <button
+                type="button"
+                aria-label="Notifications"
+                className="flex h-10 w-10 items-center justify-center rounded-lg text-on-surface transition-colors hover:bg-surface-container-low"
+              >
+                <Bell className="h-5 w-5" />
+              </button>
+              <Link
+                href={accountHref}
+                aria-label="My account"
+                className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-surface-container-highest ring-1 ring-on-surface/5"
+              >
+                {user?.avatarUrl ? (
+                  <Image
+                    src={user.avatarUrl}
+                    alt={user.name ? `${user.name} avatar` : "User avatar"}
+                    fill
+                    sizes="40px"
+                    className="object-cover"
+                  />
+                ) : (
+                  <span className="text-sm font-bold text-on-surface">{userInitial}</span>
+                )}
+              </Link>
+              {user?.role === "LISTENER" ? (
+                <SignOutButton variant="ghost" redirectTo={signOutHref} />
+              ) : null}
+            </>
           ) : null}
-          {primaryHref ? (
+
+          {primaryHref && primaryLabel ? (
             <Link
               href={primaryHref}
-              className="px-4 py-2 text-sm sm:text-base sm:px-5 md:px-6 md:py-2.5 bg-primary text-on-surface font-semibold hover:opacity-90 transition-all rounded-none"
+              className="rounded-none bg-primary px-4 py-2 text-sm font-semibold text-on-surface transition-all hover:opacity-90 sm:px-5 sm:text-base md:px-6 md:py-2.5"
             >
               {primaryLabel}
             </Link>
-          ) : (
-            <span className="px-4 py-2 text-sm sm:text-base sm:px-5 md:px-6 md:py-2.5 bg-surface-container text-on-surface-variant font-semibold rounded-none animate-pulse">
-              {primaryLabel}
-            </span>
-          )}
+          ) : null}
         </div>
       </div>
-      <div className="bg-surface-container-high h-px w-full absolute bottom-0" />
+      <div className="absolute bottom-0 h-px w-full bg-surface-container-high" />
     </nav>
   );
 }

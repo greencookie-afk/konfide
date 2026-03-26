@@ -1,5 +1,6 @@
 import AuthForm from "@/components/auth/AuthForm";
-import { redirectAuthenticatedUser } from "@/lib/auth/server";
+import Navbar from "@/components/shared/Navbar";
+import { redirectAuthenticatedUser } from "@/server/auth/server";
 
 type AuthPageSearchParams = Promise<{
   mode?: string | string[];
@@ -24,5 +25,10 @@ export default async function AuthPage({
   const error = readParam(params.error) || "";
   const details = readParam(params.details) || "";
 
-  return <AuthForm initialMode={mode} initialRole={role} initialError={error} initialDetails={details} />;
+  return (
+    <div className="min-h-screen overflow-x-hidden bg-surface">
+      <Navbar />
+      <AuthForm initialMode={mode} initialRole={role} initialError={error} initialDetails={details} />
+    </div>
+  );
 }

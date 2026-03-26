@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
-import { sanitizeUser, signOutUser } from "@/lib/auth/shared";
-import { getCurrentUser } from "@/lib/auth/server";
+import { getSessionUserFromRequest, sanitizeUser, signOutUser } from "@/server/auth/service";
 
-export async function GET() {
-  const user = await getCurrentUser();
+export async function GET(request: Request) {
+  const user = await getSessionUserFromRequest(request);
 
   if (!user) {
     return NextResponse.json(

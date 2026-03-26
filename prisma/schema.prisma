@@ -4,7 +4,7 @@
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../src/generated/prisma"
 }
 
@@ -18,17 +18,28 @@ enum UserRole {
   ADMIN
 }
 
+enum SessionStatus {
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
 model User {
-  id            String   @id @default(cuid())
-  name          String?
-  email         String   @unique
-  emailVerified Boolean  @default(false)
-  passwordHash  String?
-  googleSubject String?  @unique
-  avatarUrl     String?
-  role          UserRole
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id                        String                     @id @default(cuid())
+  name                      String?
+  email                     String                     @unique
+  emailVerified             Boolean                    @default(false)
+  passwordHash              String?
+  googleSubject             String?                    @unique
+  avatarUrl                 String?
+  role                      UserRole
+  listenerProfile           ListenerProfile?
+  listenerSettings          ListenerSettings?
+  listenerAvailabilitySlots ListenerAvailabilitySlot[] @relation("ListenerAvailabilitySlots")
+  listenerSessions          SessionBooking[]           @relation("ListenerSessions")
+  talkerSessions            SessionBooking[]           @relation("TalkerSessions")
+  createdAt                 DateTime                   @default(now())
+  updatedAt                 DateTime                   @updatedAt
 }
 
 model AuthRateLimitBucket {
@@ -43,4 +54,68 @@ model AuthRateLimitBucket {
 
   @@unique([action, key, windowStart])
   @@index([expiresAt])
+}
+
+model ListenerProfile {
+  id                 String   @id @default(cuid())
+  userId             String   @unique
+  slug               String   @unique
+  headline           String?
+  about              String?
+  ratePerMinuteCents Int?
+  specialties        String[] @default([])
+  languages          String[] @default([])
+  isPublished        Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ListenerSettings {
+  id                   String   @id @default(cuid())
+  userId               String   @unique
+  timezone             String   @default("Asia/Kolkata")
+  defaultSessionMinutes Int     @default(45)
+  bufferMinutes        Int      @default(15)
+  acceptingNewBookings Boolean  @default(true)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ListenerAvailabilitySlot {
+  id          String   @id @default(cuid())
+  listenerId  String
+  dayOfWeek   Int
+  startMinute Int
+  endMinute   Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  listener User @relation("ListenerAvailabilitySlots", fields: [listenerId], references: [id], onDelete: Cascade)
+
+  @@index([listenerId, dayOfWeek])
+}
+
+model SessionBooking {
+  id                String        @id @default(cuid())
+  listenerId        String
+  talkerId          String
+  scheduledAt       DateTime
+  durationMinutes   Int
+  topic             String?
+  notes             String?
+  ratePerMinuteCents Int
+  totalAmountCents  Int
+  status            SessionStatus @default(CONFIRMED)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  listener User @relation("ListenerSessions", fields: [listenerId], references: [id], onDelete: Cascade)
+  talker   User @relation("TalkerSessions", fields: [talkerId], references: [id], onDelete: Cascade)
+
+  @@index([listenerId, scheduledAt])
+  @@index([talkerId, scheduledAt])
 }
