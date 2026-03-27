@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { LoaderCircle, SendHorizontal } from "lucide-react";
 import type { SessionChatState, SessionChatMessageView } from "@/server/chat/service";
 
@@ -27,6 +27,7 @@ export default function SessionChatRoom({ sessionId, currentUserId, initialState
   const [draft, setDraft] = useState("");
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
+  const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -62,6 +63,12 @@ export default function SessionChatRoom({ sessionId, currentUserId, initialState
       window.clearInterval(intervalId);
     };
   }, [sessionId]);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({
+      block: "end",
+    });
+  }, [messages.length]);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -104,34 +111,35 @@ export default function SessionChatRoom({ sessionId, currentUserId, initialState
   };
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-[18px] border border-primary/10 bg-primary-container px-4 py-4 text-sm leading-6 text-on-primary-container">
+    <div className="flex min-h-[calc(100svh-11rem)] flex-col bg-surface-container-lowest">
+      <div
+        className={`border-b px-3 py-2 text-[12px] leading-5 sm:px-4 ${
+          canSend ? "border-green-600/20 bg-green-50 text-green-700" : "border-on-surface/8 bg-surface text-on-surface-variant"
+        }`}
+      >
         {accessMessage}
       </div>
 
-      <div className="rounded-[20px] border border-on-surface/5 bg-surface px-4 py-4">
-        <div className="max-h-[26rem] space-y-3 overflow-y-auto pr-1">
-          {messages.length ? (
-            messages.map((message) => {
+      <div className="flex-1 overflow-y-auto bg-surface-container-low px-3 py-3 sm:px-4">
+        {messages.length ? (
+          <div className="space-y-2">
+            {messages.map((message) => {
               const isOwnMessage = message.sender.id === currentUserId;
 
               return (
-                <article
-                  key={message.id}
-                  className={`flex gap-3 ${isOwnMessage ? "justify-end" : "justify-start"}`}
-                >
+                <article key={message.id} className={`flex gap-2 ${isOwnMessage ? "justify-end" : "justify-start"}`}>
                   {!isOwnMessage ? (
-                    <div className="relative h-9 w-9 overflow-hidden rounded-full bg-surface-container-highest">
+                    <div className="relative h-8 w-8 overflow-hidden bg-surface-container-highest">
                       {message.sender.avatarUrl ? (
                         <Image
                           src={message.sender.avatarUrl}
                           alt={`${message.sender.name} avatar`}
                           fill
-                          sizes="36px"
+                          sizes="32px"
                           className="object-cover"
                         />
                       ) : (
-                        <div className="flex h-full w-full items-center justify-center text-xs font-bold text-on-surface">
+                        <div className="flex h-full w-full items-center justify-center text-[11px] font-bold text-on-surface">
                           {message.sender.name.charAt(0)}
                         </div>
                       )}
@@ -139,46 +147,51 @@ export default function SessionChatRoom({ sessionId, currentUserId, initialState
                   ) : null}
 
                   <div
-                    className={`max-w-[85%] rounded-[18px] px-4 py-3 text-sm shadow-sm ${
+                    className={`max-w-[85%] border px-3 py-2 text-[13px] ${
                       isOwnMessage
-                        ? "bg-primary text-on-surface"
-                        : "border border-on-surface/5 bg-surface-container-lowest text-on-surface"
+                        ? "border-primary bg-primary text-on-surface"
+                        : "border-on-surface/8 bg-surface text-on-surface"
                     }`}
                   >
-                    <p className={`font-semibold ${isOwnMessage ? "text-on-surface" : "text-on-surface"}`}>
-                      {isOwnMessage ? "You" : message.sender.name}
-                    </p>
-                    <p className="mt-1 whitespace-pre-wrap leading-6">{message.body}</p>
-                    <p className={`mt-2 text-[11px] ${isOwnMessage ? "text-on-surface/70" : "text-on-surface-variant"}`}>
+                    <p className="font-semibold">{isOwnMessage ? "You" : message.sender.name}</p>
+                    <p className="mt-1 whitespace-pre-wrap leading-5">{message.body}</p>
+                    <p className={`mt-2 text-[10px] ${isOwnMessage ? "text-on-surface/70" : "text-on-surface-variant"}`}>
                       {formatDateTime(message.createdAt)}
                     </p>
                   </div>
                 </article>
               );
-            })
-          ) : (
-            <div className="rounded-[16px] border border-dashed border-on-surface/10 bg-surface-container-low px-4 py-5 text-sm text-on-surface-variant">
-              No messages yet. Once the listener accepts and the chat opens, the conversation will appear here.
-            </div>
-          )}
-        </div>
+            })}
+            <div ref={bottomRef} />
+          </div>
+        ) : (
+          <div className="border border-dashed border-on-surface/10 bg-surface px-4 py-5 text-sm text-on-surface-variant">
+            No messages yet. This chat history will stay here once the request is accepted.
+          </div>
+        )}
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-3">
+      <form onSubmit={handleSubmit} className="border-t border-on-surface/8 bg-surface px-3 py-3 sm:px-4">
         <textarea
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
           disabled={!canSend || isPending}
-          rows={4}
-          placeholder={canSend ? "Write a message…" : accessMessage}
-          className="w-full rounded-[16px] border border-on-surface/5 bg-surface px-4 py-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60"
+          rows={2}
+          placeholder={canSend ? "Write a message" : "Typing unlocks after acceptance"}
+          className="min-h-20 w-full resize-none border border-on-surface/10 bg-surface-container-lowest px-3 py-3 text-sm outline-none transition focus:border-primary focus:ring-1 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-60"
         />
-        <div className="flex items-center justify-between gap-3">
-          {error ? <p className="text-sm text-red-700">{error}</p> : <div />}
+        <div className="mt-2 flex items-center justify-between gap-3">
+          {error ? (
+            <p className="text-[12px] text-red-700">{error}</p>
+          ) : (
+            <p className="text-[11px] uppercase tracking-[0.18em] text-on-surface-variant">
+              {canSend ? "Live now" : "Locked"}
+            </p>
+          )}
           <button
             type="submit"
             disabled={!canSend || isPending}
-            className="inline-flex items-center justify-center gap-2 rounded-[14px] bg-primary px-5 py-3 text-sm font-semibold text-on-surface transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex items-center justify-center gap-2 bg-primary px-4 py-2 text-sm font-semibold text-on-surface transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isPending ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <SendHorizontal className="h-4 w-4" />}
             Send

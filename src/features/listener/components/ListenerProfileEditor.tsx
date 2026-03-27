@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { LoaderCircle } from "lucide-react";
 import type { ListenerProfileEditorData } from "@/server/listeners/types";
@@ -14,6 +15,7 @@ function splitList(value: string) {
 }
 
 export default function ListenerProfileEditor({ initialData }: ListenerProfileEditorProps) {
+  const router = useRouter();
   const [slug, setSlug] = useState(initialData.slug);
   const [headline, setHeadline] = useState(initialData.headline);
   const [about, setAbout] = useState(initialData.about);
@@ -24,18 +26,6 @@ export default function ListenerProfileEditor({ initialData }: ListenerProfileEd
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
   const specialtyList = splitList(specialties);
-  const completionItems = [
-    Boolean(initialData.name),
-    Boolean(initialData.avatarUrl),
-    Boolean(slug.trim()),
-    Boolean(headline.trim()),
-    Boolean(about.trim()),
-    Boolean(specialtyList.length),
-    initialData.isAvailableNow,
-  ];
-  const profileCompletion = Math.round(
-    (completionItems.filter(Boolean).length / completionItems.length) * 100
-  );
 
   const handleSave = async () => {
     setMessage("");
@@ -64,7 +54,9 @@ export default function ListenerProfileEditor({ initialData }: ListenerProfileEd
           return;
         }
 
-        setMessage("Public profile saved.");
+        setMessage("Profile saved. Opening dashboard...");
+        router.push("/listener/dashboard");
+        router.refresh();
       } catch {
         setError("We could not save your public profile.");
       }
@@ -73,7 +65,7 @@ export default function ListenerProfileEditor({ initialData }: ListenerProfileEd
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-      <section className="rounded-[22px] border border-on-surface/5 bg-surface-container-lowest p-5 shadow-sm sm:p-6">
+      <section className="border border-on-surface/8 bg-surface-container-lowest p-4 sm:p-5">
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block sm:col-span-2">
             <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-on-surface-variant">
@@ -84,7 +76,7 @@ export default function ListenerProfileEditor({ initialData }: ListenerProfileEd
               value={slug}
               onChange={(event) => setSlug(event.target.value)}
               placeholder="sarah-jones"
-              className="w-full rounded-[16px] border border-on-surface/5 bg-surface px-4 py-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+              className="w-full border border-on-surface/10 bg-surface px-3 py-3 text-sm outline-none transition focus:border-primary focus:ring-1 focus:ring-primary/20"
             />
           </label>
 
@@ -97,7 +89,7 @@ export default function ListenerProfileEditor({ initialData }: ListenerProfileEd
               value={headline}
               onChange={(event) => setHeadline(event.target.value)}
               placeholder="Gentle support for stress, grief, or major life changes"
-              className="w-full rounded-[16px] border border-on-surface/5 bg-surface px-4 py-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+              className="w-full border border-on-surface/10 bg-surface px-3 py-3 text-sm outline-none transition focus:border-primary focus:ring-1 focus:ring-primary/20"
             />
           </label>
 
@@ -110,7 +102,7 @@ export default function ListenerProfileEditor({ initialData }: ListenerProfileEd
               value={languages}
               onChange={(event) => setLanguages(event.target.value)}
               placeholder="English, Hindi"
-              className="w-full rounded-[16px] border border-on-surface/5 bg-surface px-4 py-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+              className="w-full border border-on-surface/10 bg-surface px-3 py-3 text-sm outline-none transition focus:border-primary focus:ring-1 focus:ring-primary/20"
             />
           </label>
 
@@ -123,7 +115,7 @@ export default function ListenerProfileEditor({ initialData }: ListenerProfileEd
               value={specialties}
               onChange={(event) => setSpecialties(event.target.value)}
               placeholder="Anxiety, Grief, Workplace Stress"
-              className="w-full rounded-[16px] border border-on-surface/5 bg-surface px-4 py-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+              className="w-full border border-on-surface/10 bg-surface px-3 py-3 text-sm outline-none transition focus:border-primary focus:ring-1 focus:ring-primary/20"
             />
           </label>
 
@@ -136,49 +128,14 @@ export default function ListenerProfileEditor({ initialData }: ListenerProfileEd
               value={about}
               onChange={(event) => setAbout(event.target.value)}
               placeholder="Describe how you support people, what you are best at listening to, and what someone can expect from a session."
-              className="w-full rounded-[16px] border border-on-surface/5 bg-surface px-4 py-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+              className="w-full border border-on-surface/10 bg-surface px-3 py-3 text-sm outline-none transition focus:border-primary focus:ring-1 focus:ring-primary/20"
             />
           </label>
         </div>
       </section>
 
       <aside className="space-y-4">
-        <section className="rounded-[22px] border border-on-surface/5 bg-surface-container-lowest p-5 shadow-sm">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-on-surface-variant">
-                Profile completion
-              </p>
-              <p className="mt-2 text-3xl font-bold text-on-surface">{profileCompletion}%</p>
-            </div>
-            <span className="rounded-full bg-primary-container px-3 py-1 text-xs font-semibold text-on-surface">
-              {isPublished ? "Published" : "Draft"}
-            </span>
-          </div>
-
-          <div className="mt-4 h-2 overflow-hidden rounded-full bg-surface">
-            <div
-              className="h-full rounded-full bg-primary transition-[width] duration-300"
-              style={{ width: `${profileCompletion}%` }}
-            />
-          </div>
-
-          <p className="mt-4 text-sm leading-6 text-on-surface-variant">
-            This score now lives here so you can finish your listing where you edit it.{" "}
-            {initialData.isAvailableNow
-              ? "Your availability switch is already on."
-              : "Turn on live availability when you are ready to appear in browse."}
-          </p>
-
-          <Link
-            href="/listener/availability"
-            className="mt-4 inline-flex text-sm font-semibold text-primary transition hover:opacity-80"
-          >
-            Open availability settings
-          </Link>
-        </section>
-
-        <section className="rounded-[22px] border border-on-surface/5 bg-surface-container-lowest p-5 shadow-sm">
+        <section className="border border-on-surface/8 bg-surface-container-lowest p-4">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-on-surface-variant">Live preview</p>
           <h3 className="mt-2 text-xl font-bold text-on-surface">{headline.trim() || initialData.name || "Your listener listing"}</h3>
           <p className="mt-2 text-sm leading-6 text-on-surface-variant">
@@ -186,11 +143,11 @@ export default function ListenerProfileEditor({ initialData }: ListenerProfileEd
           </p>
 
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            <div className="rounded-[16px] bg-surface px-4 py-4">
+            <div className="bg-surface px-3 py-3">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-on-surface-variant">Public URL</p>
               <p className="mt-2 text-sm font-semibold text-on-surface">{slug.trim() ? `/explore/${slug.trim()}` : "Set your slug"}</p>
             </div>
-            <div className="rounded-[16px] bg-surface px-4 py-4">
+            <div className="bg-surface px-3 py-3">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-on-surface-variant">Availability</p>
               <p className="mt-2 text-sm font-semibold text-on-surface">
                 {initialData.isAvailableNow ? "Visible in browse" : "Hidden until you turn availability on"}
@@ -198,7 +155,7 @@ export default function ListenerProfileEditor({ initialData }: ListenerProfileEd
             </div>
           </div>
 
-          <div className="mt-4 rounded-[16px] bg-surface px-4 py-4">
+          <div className="mt-4 bg-surface px-3 py-3">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-on-surface-variant">Specialties</p>
             <p className="mt-2 text-sm text-on-surface-variant">
               {specialtyList.length ? specialtyList.join(", ") : "Add specialties so users can quickly understand what you support."}
@@ -206,8 +163,8 @@ export default function ListenerProfileEditor({ initialData }: ListenerProfileEd
           </div>
         </section>
 
-        <section className="rounded-[22px] border border-primary/10 bg-primary-container p-5 shadow-sm">
-          <label className="flex items-start justify-between gap-4 rounded-[18px] bg-surface px-4 py-4">
+        <section className="border border-primary/15 bg-primary-container p-4">
+          <label className="flex items-start justify-between gap-4 bg-surface px-3 py-3">
             <div>
               <p className="font-semibold text-on-surface">Publish profile</p>
               <p className="text-sm leading-6 text-on-surface-variant">
@@ -223,12 +180,20 @@ export default function ListenerProfileEditor({ initialData }: ListenerProfileEd
           </label>
         </section>
 
-        <section className="rounded-[22px] border border-on-surface/5 bg-surface-container-lowest p-5 shadow-sm">
+        <section className="border border-on-surface/8 bg-surface-container-lowest p-4">
+          <div className="mb-4 flex items-center justify-between gap-3 border-b border-on-surface/8 pb-4">
+            <p className="text-sm text-on-surface-variant">
+              {initialData.isAvailableNow ? "You are visible right now." : "Turn availability on when you want to appear in browse."}
+            </p>
+            <Link href="/listener/availability" className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+              Availability
+            </Link>
+          </div>
           <button
             type="button"
             onClick={handleSave}
             disabled={isPending}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-[16px] bg-primary px-5 py-3 text-sm font-semibold text-on-surface transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex w-full items-center justify-center gap-2 bg-primary px-5 py-3 text-sm font-semibold text-on-surface transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isPending ? <LoaderCircle className="h-4 w-4 animate-spin" /> : null}
             Save public profile

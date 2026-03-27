@@ -19,12 +19,14 @@ export default async function ListenerSessionChatPage({
   }
 
   return (
-    <SessionChatView
-      session={session}
-      viewerRole="LISTENER"
-      basePath={`/listener/sessions/${session.id}`}
-      currentUserId={user.id}
-      initialChatState={chatState}
-    />
+    <div className="mx-auto max-w-5xl">
+      <SessionChatView
+        session={session}
+        viewerRole="LISTENER"
+        basePath="/listener/sessions"
+        currentUserId={user.id}
+        initialChatState={chatState}
+      />
+    </div>
   );
 }

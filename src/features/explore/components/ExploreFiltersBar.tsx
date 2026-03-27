@@ -27,7 +27,7 @@ export default function ExploreFiltersBar({ filters, topics, total, visibleCount
         <form action="/explore" method="GET" className="flex flex-wrap items-center gap-3">
           {filters.query ? <input type="hidden" name="q" value={filters.query} /> : null}
           {filters.topic ? <input type="hidden" name="topic" value={filters.topic} /> : null}
-          <label className="inline-flex items-center gap-2 rounded-[14px] border border-on-surface/5 bg-surface-container-lowest px-4 py-3 text-sm text-on-surface-variant">
+          <label className="inline-flex items-center gap-2 border border-on-surface/8 bg-surface-container-lowest px-3 py-2 text-sm text-on-surface-variant">
             <SlidersHorizontal className="h-4 w-4 text-primary" />
             <span>Sort</span>
             <select
@@ -44,7 +44,7 @@ export default function ExploreFiltersBar({ filters, topics, total, visibleCount
           </label>
           <button
             type="submit"
-            className="rounded-[14px] bg-on-surface px-4 py-3 text-sm font-semibold text-surface transition hover:opacity-90"
+            className="bg-on-surface px-4 py-2 text-sm font-semibold text-surface transition hover:opacity-90"
           >
             Apply
           </button>
@@ -54,7 +54,7 @@ export default function ExploreFiltersBar({ filters, topics, total, visibleCount
       <div className="flex flex-wrap gap-2">
         <Link
           href={buildExploreHref(filters, { topic: null, page: 1 })}
-          className={`rounded-[14px] px-4 py-2 text-sm font-semibold transition ${
+          className={`px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] transition ${
             !filters.topic
               ? "bg-primary text-on-surface"
               : "border border-on-surface/10 bg-surface-container-lowest text-on-surface-variant hover:border-primary/20 hover:text-on-surface"
@@ -69,7 +69,7 @@ export default function ExploreFiltersBar({ filters, topics, total, visibleCount
               topic,
               page: 1,
             })}
-            className={`rounded-[14px] px-4 py-2 text-sm font-semibold transition ${
+            className={`px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] transition ${
               filters.topic === topic
                 ? "bg-primary text-on-surface"
                 : "border border-on-surface/10 bg-surface-container-lowest text-on-surface-variant hover:border-primary/20 hover:text-on-surface"

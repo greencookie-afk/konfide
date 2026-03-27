@@ -50,7 +50,7 @@ async function getTalkerNotifications(userId: string): Promise<NavbarNotificatio
       session.paymentStatus === "PAID"
         ? `Chat started ${formatDateTime(session.scheduledAt)}`
         : `Request sent ${formatDateTime(session.createdAt)}`,
-    href: `/sessions/${session.id}`,
+    href: `/sessions/${session.id}/chat`,
     timestamp: (session.paidAt ?? session.createdAt).toISOString(),
     tone: "session",
   }));
@@ -101,13 +101,11 @@ async function getListenerNotifications(userId: string): Promise<NavbarNotificat
   ]);
 
   const notifications: NavbarNotification[] = [];
-  const profileReady = Boolean(profile?.slug && profile.headline && profile.about && profile.specialties.length);
-
-  if (!profileReady || !profile?.isPublished) {
+  if (!profile?.slug || !profile?.isPublished) {
     notifications.push({
       id: "listener-profile",
-      title: "Finish your public profile",
-      description: "Add your headline, about section, specialties, and publish the listing when ready.",
+      title: "Update your public profile",
+      description: "Save a public slug and publish the listing whenever you want to appear in browse.",
       href: "/listener/profile",
       timestamp: null,
       tone: "action",
@@ -130,7 +128,7 @@ async function getListenerNotifications(userId: string): Promise<NavbarNotificat
       id: session.id,
       title: `New request from ${session.talker.name ?? "a Konfide member"}`,
       description: `${getSessionConnectionLabel(session.paymentStatus)} · ${formatDateTime(session.createdAt)}`,
-      href: `/listener/sessions/${session.id}`,
+      href: `/listener/sessions/${session.id}/chat`,
       timestamp: session.createdAt.toISOString(),
       tone: "session" as const,
     }))

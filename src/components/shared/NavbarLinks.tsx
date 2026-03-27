@@ -20,17 +20,17 @@ export default function NavbarLinks({ items }: NavbarLinksProps) {
     pathname === href || (href !== "/" && pathname.startsWith(`${href}/`));
 
   return (
-    <div className="flex items-center gap-10">
+    <div className="flex items-center gap-5">
       {items.map((item) => (
         <Link
           key={item.label}
           href={item.href}
           className={
             item.isStatic
-              ? "text-lg tracking-tight text-on-surface/60 transition-colors hover:text-on-surface"
+              ? "border-b border-transparent pb-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-on-surface-variant transition-colors hover:text-on-surface"
               : isActiveRoute(item.href)
-                ? "border-b-2 border-primary pb-1 text-lg tracking-tight text-on-surface"
-                : "text-lg tracking-tight text-on-surface/60 transition-colors hover:text-on-surface"
+                ? "border-b border-primary pb-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-on-surface"
+                : "border-b border-transparent pb-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-on-surface-variant transition-colors hover:text-on-surface"
           }
         >
           {item.label}

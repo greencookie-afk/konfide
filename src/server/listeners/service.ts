@@ -178,10 +178,6 @@ export async function saveListenerProfile(userId: string, input: ListenerProfile
     throw new Error("That public profile URL is already taken.");
   }
 
-  if (isPublished && (!headline || !about || specialties.length === 0)) {
-    throw new Error("Complete the headline, about section, and specialties before publishing.");
-  }
-
   return upsertListenerProfile(userId, {
     slug,
     headline,

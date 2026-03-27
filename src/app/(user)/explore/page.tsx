@@ -32,7 +32,7 @@ export default async function ExploreListenersPage({
     <div className="min-h-screen bg-surface text-on-surface">
       <Navbar />
 
-      <main className="mx-auto max-w-7xl px-4 pb-20 pt-28 sm:px-6 md:px-8">
+      <main className="mx-auto max-w-7xl px-4 pb-20 pt-20 sm:px-6 md:px-8">
         <ExploreCatalog browseResult={browseResult} />
       </main>
 

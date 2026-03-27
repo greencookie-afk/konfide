@@ -11,17 +11,17 @@ export default function ExploreHero({ filters, total }: ExploreHeroProps) {
   const hasFilters = Boolean(filters.query || filters.topic || filters.sort !== "recent");
 
   return (
-    <section className="rounded-[18px] border border-on-surface/5 bg-surface-container-lowest p-5 shadow-sm sm:p-6">
+    <section className="border border-on-surface/8 bg-surface-container-lowest p-4 sm:p-5">
       <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
         <div className="max-w-2xl">
           <p className="mb-2 text-xs font-bold uppercase tracking-[0.24em] text-primary">Explore listeners</p>
-          <h1 className="text-3xl font-bold tracking-tight text-on-surface md:text-4xl">Find a listener who is ready to connect now.</h1>
-          <p className="mt-3 text-sm leading-6 text-on-surface-variant md:text-base">
+          <h1 className="text-2xl font-bold tracking-tight text-on-surface sm:text-3xl">Find a listener who is ready to connect now.</h1>
+          <p className="mt-3 text-sm leading-6 text-on-surface-variant">
             Published listeners appear here when their live availability is turned on. Browse quickly, open a profile,
             and send a chat request when the fit feels right.
           </p>
         </div>
-        <div className="rounded-[16px] border border-on-surface/5 bg-surface px-4 py-4 text-sm text-on-surface-variant">
+        <div className="border border-on-surface/10 bg-surface px-3 py-3 text-sm text-on-surface-variant">
           <span className="font-semibold text-on-surface">{total}</span> listener{total === 1 ? "" : "s"} available now
         </div>
       </div>
@@ -36,13 +36,13 @@ export default function ExploreHero({ filters, total }: ExploreHeroProps) {
             name="q"
             defaultValue={filters.query}
             placeholder="Search by name, burnout, grief, relationships..."
-            className="w-full rounded-[16px] border border-on-surface/5 bg-surface px-12 py-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+            className="w-full border border-on-surface/10 bg-surface px-12 py-3 text-sm outline-none transition focus:border-primary focus:ring-1 focus:ring-primary/20"
           />
         </div>
         <div className="flex gap-3">
           <button
             type="submit"
-            className="inline-flex items-center justify-center gap-2 rounded-[16px] bg-primary px-5 py-3 text-sm font-semibold text-on-surface transition hover:opacity-90"
+            className="inline-flex items-center justify-center gap-2 bg-primary px-4 py-3 text-sm font-semibold text-on-surface transition hover:opacity-90"
           >
             <Search className="h-4 w-4" />
             Search
@@ -50,7 +50,7 @@ export default function ExploreHero({ filters, total }: ExploreHeroProps) {
           {hasFilters ? (
             <Link
               href="/explore"
-              className="inline-flex items-center justify-center rounded-[16px] border border-on-surface/10 px-5 py-3 text-sm font-semibold text-on-surface-variant transition hover:border-primary/20 hover:text-on-surface"
+              className="inline-flex items-center justify-center border border-on-surface/10 px-4 py-3 text-sm font-semibold text-on-surface-variant transition hover:border-primary/20 hover:text-on-surface"
             >
               Clear
             </Link>

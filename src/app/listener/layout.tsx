@@ -1,4 +1,4 @@
-import Footer from "@/components/shared/Footer";
+import ListenerLayoutShell from "@/components/shared/ListenerLayoutShell";
 import Navbar from "@/components/shared/Navbar";
 import { requireUser } from "@/server/auth/server";
 
@@ -12,8 +12,7 @@ export default async function ListenerLayout({
   return (
     <div className="min-h-screen bg-surface text-on-surface">
       <Navbar />
-      <main className="mx-auto max-w-7xl px-4 pb-20 pt-28 sm:px-6 md:px-8">{children}</main>
-      <Footer />
+      <ListenerLayoutShell>{children}</ListenerLayoutShell>
     </div>
   );
 }
