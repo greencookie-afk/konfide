@@ -197,8 +197,15 @@ The build already runs `prisma generate` automatically, so the Prisma client sta
 npm run dev
 npm run lint
 npm run build
+npm run typegen
 npm run prisma:push
 npm run prisma:reset
+```
+
+If your editor reports that `.next/types/routes.d.ts` is missing after local cleanup, run:
+
+```bash
+npm run typegen
 ```
 
 ## Database Reset

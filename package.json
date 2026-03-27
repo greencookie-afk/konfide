@@ -6,9 +6,10 @@
     "dev": "next dev",
     "dev:clean": "bash ./scripts/dev-clean.sh",
     "build": "prisma generate && next build",
-    "clean:runtime": "bash ./scripts/archive-runtime-cache.sh",
+    "clean:runtime": "bash ./scripts/archive-runtime-cache.sh && next typegen",
     "start": "next start",
     "lint": "eslint",
+    "typegen": "next typegen",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
     "prisma:reset": "prisma db push --force-reset"
