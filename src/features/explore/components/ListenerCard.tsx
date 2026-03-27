@@ -8,6 +8,17 @@ type ListenerCardProps = {
 };
 
 export default function ListenerCard({ listener }: ListenerCardProps) {
+  const statusClass = listener.isActiveNow
+    ? "bg-primary-container text-on-primary-container"
+    : listener.isAcceptingRequests
+      ? "bg-surface text-on-surface ring-1 ring-primary/15"
+      : "bg-surface text-on-surface-variant ring-1 ring-on-surface/8";
+  const statusLabel = listener.isActiveNow
+    ? "Active now"
+    : listener.isAcceptingRequests
+      ? "Requests on"
+      : "Requests off";
+
   return (
     <article className="flex h-full flex-col border border-on-surface/8 bg-surface-container-lowest p-4 transition-colors hover:border-primary/20">
       <div className="flex items-start justify-between gap-4">
@@ -33,15 +44,9 @@ export default function ListenerCard({ listener }: ListenerCardProps) {
             <p className="mt-1 text-sm text-on-surface">{listener.headline}</p>
           </div>
         </div>
-        <span
-          className={`inline-flex items-center gap-2 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${
-            listener.isAvailableNow
-              ? "bg-primary-container text-on-primary-container"
-              : "bg-surface text-on-surface-variant ring-1 ring-on-surface/8"
-          }`}
-        >
+        <span className={`inline-flex items-center gap-2 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${statusClass}`}>
           <CircleDot className="h-3.5 w-3.5" />
-          {listener.isAvailableNow ? "Available now" : "Unavailable"}
+          {statusLabel}
         </span>
       </div>
 
@@ -53,7 +58,7 @@ export default function ListenerCard({ listener }: ListenerCardProps) {
             <MessageSquareMore className="h-4 w-4 text-primary" />
             <span className="font-semibold">How it starts</span>
           </div>
-          <p className="mt-2 text-sm">Send a request and wait for acceptance.</p>
+          <p className="mt-2 text-sm">Send one request and wait for acceptance.</p>
         </div>
         <div className="bg-surface px-3 py-3 text-sm text-on-surface-variant">
           <div className="flex items-center gap-2 text-on-surface">
@@ -83,12 +88,18 @@ export default function ListenerCard({ listener }: ListenerCardProps) {
           View profile
           <ArrowRight className="h-4 w-4" />
         </Link>
-        <Link
-          href={`/explore/${listener.slug}/connect`}
-          className="inline-flex items-center justify-center border border-on-surface/10 bg-surface px-4 py-3 text-sm font-semibold text-on-surface transition hover:border-primary/20 hover:text-primary"
-        >
-          Request chat
-        </Link>
+        {listener.isAcceptingRequests ? (
+          <Link
+            href={`/explore/${listener.slug}/connect`}
+            className="inline-flex items-center justify-center border border-on-surface/10 bg-surface px-4 py-3 text-sm font-semibold text-on-surface transition hover:border-primary/20 hover:text-primary"
+          >
+            Request chat
+          </Link>
+        ) : (
+          <span className="inline-flex items-center justify-center border border-on-surface/8 bg-surface-container-low px-4 py-3 text-sm font-semibold text-on-surface-variant">
+            Requests paused
+          </span>
+        )}
       </div>
     </article>
   );

@@ -136,7 +136,7 @@ export default function JoinPage() {
                 </div>
                 <h3 className="mb-2 text-lg font-bold tracking-tight">Turn on availability</h3>
                 <p className="text-sm leading-relaxed text-on-surface-variant">
-                  Use the single availability switch to appear in browse and start receiving live requests.
+                  Use the single requests switch to accept new chats, while your published profile stays visible in explore.
                 </p>
               </div>
             </div>

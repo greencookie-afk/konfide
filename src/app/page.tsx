@@ -22,7 +22,7 @@ export default function Home() {
             Talk to someone who actually gets it.
           </h1>
           <p className="mx-auto mb-6 max-w-xl text-sm font-light leading-relaxed text-on-surface-variant sm:text-base md:text-lg">
-            Browse listeners who are available right now, send a request, and start chatting as soon as it is
+            Browse published listeners, see who is active now, send a request, and start chatting as soon as it is
             accepted.
           </p>
           <div className="flex flex-wrap justify-center gap-3">
@@ -56,8 +56,8 @@ export default function Home() {
               </div>
               <h3 className="text-xl font-bold tracking-tight text-surface md:text-2xl">Live listener discovery</h3>
               <p className="text-sm leading-relaxed text-surface/70 md:text-base">
-                Browse listeners by their real profile, specialties, and current availability instead of placeholder
-                cards.
+                Browse listeners by their real profile, specialties, and whether they are active now or just accepting
+                requests.
               </p>
             </div>
             <div className="flex flex-col gap-4 border-b border-surface/10 p-8 transition-colors hover:bg-surface/5 md:border-b-0 md:border-r md:p-12 md:gap-6">

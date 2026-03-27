@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ArrowUpRight, MessageSquareText } from "lucide-react";
 import type { SessionPaymentStatus } from "@/generated/prisma";
 import AcceptSessionButton from "@/features/sessions/components/AcceptSessionButton";
-import { getSessionTimingSnapshot, type SessionCard } from "@/server/sessions/service";
+import type { SessionCard } from "@/server/sessions/service";
 
 type SessionInboxProps = {
   sessions: SessionCard[];
@@ -52,36 +52,14 @@ function getSessionState(session: SessionCard) {
     };
   }
 
-  const timing = getSessionTimingSnapshot(session);
-
-  if (timing.isJoinWindowOpen) {
-    return {
-      label: "Live",
-      tone: "live" as const,
-      meta: `Started ${formatDateTime(session.acceptedAt ?? session.scheduledAt)}`,
-    };
-  }
-
-  if (timing.endsAt <= new Date()) {
-    return {
-      label: "Ended",
-      tone: "muted" as const,
-      meta: `Ended ${formatDateTime(timing.endsAt)}`,
-    };
-  }
-
   return {
-    label: "Accepted",
+    label: "Open",
     tone: "connected" as const,
-    meta: `Accepted ${formatDateTime(session.acceptedAt ?? session.scheduledAt)}`,
+    meta: `Opened ${formatDateTime(session.acceptedAt ?? session.scheduledAt)}`,
   };
 }
 
-function getStatusClass(tone: "pending" | "live" | "connected" | "muted", paymentStatus: SessionPaymentStatus) {
-  if (tone === "live") {
-    return "bg-green-600 text-white";
-  }
-
+function getStatusClass(tone: "pending" | "connected" | "muted", paymentStatus: SessionPaymentStatus) {
   if (tone === "connected") {
     return "bg-primary-container text-on-primary-container";
   }
@@ -107,8 +85,8 @@ export default function SessionInbox({
     chatHref: buildChatHref(viewerRole, session.id),
   }));
   const pendingCount = rows.filter((row) => row.state.label === "Pending").length;
-  const liveCount = rows.filter((row) => row.state.label === "Live").length;
-  const historyCount = rows.length - pendingCount - liveCount;
+  const openCount = rows.filter((row) => row.state.label === "Open").length;
+  const closedCount = rows.length - pendingCount - openCount;
 
   return (
     <div className="space-y-4">
@@ -133,12 +111,12 @@ export default function SessionInbox({
           <p className="mt-2 text-2xl font-bold text-on-surface">{pendingCount}</p>
         </div>
         <div className="border border-on-surface/8 bg-surface-container-lowest px-3 py-3">
-          <p className="text-[11px] uppercase tracking-[0.2em] text-on-surface-variant">Live</p>
-          <p className="mt-2 text-2xl font-bold text-on-surface">{liveCount}</p>
+          <p className="text-[11px] uppercase tracking-[0.2em] text-on-surface-variant">Open</p>
+          <p className="mt-2 text-2xl font-bold text-on-surface">{openCount}</p>
         </div>
         <div className="border border-on-surface/8 bg-surface-container-lowest px-3 py-3">
-          <p className="text-[11px] uppercase tracking-[0.2em] text-on-surface-variant">History</p>
-          <p className="mt-2 text-2xl font-bold text-on-surface">{historyCount}</p>
+          <p className="text-[11px] uppercase tracking-[0.2em] text-on-surface-variant">Closed</p>
+          <p className="mt-2 text-2xl font-bold text-on-surface">{closedCount}</p>
         </div>
       </section>
 
@@ -182,9 +160,7 @@ export default function SessionInbox({
                       </span>
                     </div>
                     <p className="mt-1 text-sm text-on-surface">{session.topic || "Support conversation"}</p>
-                    <p className="mt-1 text-[12px] text-on-surface-variant">
-                      {state.meta} · {session.durationMinutes} min
-                    </p>
+                    <p className="mt-1 text-[12px] text-on-surface-variant">{state.meta}</p>
                   </div>
                 </div>
 

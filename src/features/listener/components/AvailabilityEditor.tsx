@@ -18,8 +18,8 @@ export default function AvailabilityEditor({ initialData, notificationSettings }
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
-  const nextBrowseState =
-    acceptingNewBookings && initialData.isPublished ? "Visible while active" : "Hidden or away";
+  const nextExploreState = initialData.isListedInExplore ? "Listed in explore" : "Hidden until published";
+  const nextRequestState = acceptingNewBookings ? "Requests on" : "Requests off";
 
   const handleSave = () => {
     setError("");
@@ -53,7 +53,7 @@ export default function AvailabilityEditor({ initialData, notificationSettings }
           );
         }
 
-        setMessage(acceptingNewBookings ? "You are now visible in browse." : "You are now hidden from browse.");
+        setMessage(acceptingNewBookings ? "Requests are now on for this listener account." : "Requests are now off for this listener account.");
       } catch {
         setError("We could not update availability.");
       }
@@ -66,18 +66,18 @@ export default function AvailabilityEditor({ initialData, notificationSettings }
         <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary">Live availability</p>
         <h2 className="mt-3 text-2xl font-bold text-on-surface">Use one switch to go live when you are ready.</h2>
         <p className="mt-3 max-w-2xl text-sm leading-6 text-on-surface-variant">
-          Turning this on makes your published listener profile visible in browse so people can send you chat requests
-          right away. Turning it off hides you until you are ready again.
+          Published listener profiles stay listed in explore. This switch only controls whether new requests can reach
+          you, and the active badge appears while this workspace is still checking in.
         </p>
 
         <div className="mt-6 border border-primary/15 bg-primary-container/55 p-4">
           <label className="flex items-center justify-between gap-4 bg-surface px-3 py-3">
             <div>
-              <p className="font-semibold text-on-surface">Available now</p>
+              <p className="font-semibold text-on-surface">Accept new requests</p>
               <p className="mt-1 text-sm leading-6 text-on-surface-variant">
                 {acceptingNewBookings
-                  ? "People can find you in browse and send a request."
-                  : "Your profile stays hidden from browse until you turn this back on."}
+                  ? "People can send new requests, even if you step away briefly."
+                  : "Your published profile stays visible, but new requests stop until you turn this back on."}
               </p>
             </div>
             <input
@@ -91,18 +91,18 @@ export default function AvailabilityEditor({ initialData, notificationSettings }
 
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           <div className="border border-on-surface/8 bg-surface px-3 py-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-on-surface-variant">Browse status</p>
-            <p className="mt-2 text-sm font-semibold text-on-surface">{nextBrowseState}</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-on-surface-variant">Explore status</p>
+            <p className="mt-2 text-sm font-semibold text-on-surface">{nextExploreState}</p>
             <p className="mt-2 text-sm text-on-surface-variant">
-              Published + available + recently active are all required before users see you.
+              Publishing controls whether your profile appears in explore.
             </p>
           </div>
 
           <div className="border border-on-surface/8 bg-surface px-3 py-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-on-surface-variant">Auto-away</p>
-            <p className="mt-2 text-sm font-semibold text-on-surface">Turns off when you leave</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-on-surface-variant">Request status</p>
+            <p className="mt-2 text-sm font-semibold text-on-surface">{nextRequestState}</p>
             <p className="mt-2 text-sm text-on-surface-variant">
-              If the listener workspace is hidden or inactive, availability is removed automatically.
+              The active now badge clears after {initialData.awayTimeoutMinutes} minutes away, but this toggle stays as you set it.
             </p>
           </div>
         </div>
@@ -112,9 +112,9 @@ export default function AvailabilityEditor({ initialData, notificationSettings }
         <section className="border border-on-surface/8 bg-surface-container-lowest p-4">
           <h2 className="text-lg font-bold text-on-surface">What happens next</h2>
           <div className="mt-4 space-y-3 text-sm leading-6 text-on-surface-variant">
-            <p>Only published listener profiles can appear in browse.</p>
-            <p>Users see you only while availability is on and your listener workspace remains active.</p>
-            <p>If the page is hidden or you leave, availability turns off to avoid stale listings.</p>
+            <p>Published listener profiles stay visible in explore.</p>
+            <p>Users can send requests whenever this toggle is on.</p>
+            <p>The active now badge appears only while this workspace is still alive on the site.</p>
             <p>Once you accept, the chat opens immediately for both sides.</p>
           </div>
         </section>
@@ -123,7 +123,7 @@ export default function AvailabilityEditor({ initialData, notificationSettings }
           <section className="border border-primary/15 bg-primary-container p-4">
             <p className="font-semibold text-on-primary-container">Publish your profile first</p>
             <p className="mt-2 text-sm leading-6 text-on-primary-container/80">
-              Your availability button only affects browse once your public listener profile is published.
+              Your requests switch only affects new chats once your public listener profile is published.
             </p>
           </section>
         ) : null}

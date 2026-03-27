@@ -20,8 +20,8 @@ export default async function AvailabilitySettingsPage() {
         <p className="mb-2 text-xs font-bold uppercase tracking-[0.24em] text-primary">Availability</p>
         <h1 className="text-3xl font-bold tracking-tight md:text-4xl">Live availability</h1>
         <p className="mt-3 max-w-2xl text-sm leading-6 text-on-surface-variant md:text-base">
-          Keep this simple for now: one button controls whether you appear in browse and can receive live chat
-          requests.
+          Keep this simple for now: one button controls whether you can receive new live chat requests, while your
+          published profile stays listed in explore.
         </p>
       </section>
 

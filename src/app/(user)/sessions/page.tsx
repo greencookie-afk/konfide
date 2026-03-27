@@ -16,7 +16,7 @@ export default async function UserSessionsPage() {
           sessions={sessions}
           viewerRole="TALKER"
           title="Your conversations"
-          description="Pending requests, accepted chats, and ended conversations all stay in one compact place."
+          description="Pending requests, open chats, and older conversation history all stay in one compact place."
           actionHref="/explore"
           actionLabel="Explore listeners"
         />

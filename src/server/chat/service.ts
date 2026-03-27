@@ -1,7 +1,7 @@
 import "server-only";
 import type { SessionStatus, UserRole } from "@/generated/prisma";
 import { prisma } from "@/server/db/client";
-import { getSessionTimingSnapshot, isSessionRequestPending } from "@/server/sessions/service";
+import { isSessionRequestPending } from "@/server/sessions/service";
 
 export type SessionChatMessageView = {
   id: string;
@@ -71,17 +71,8 @@ async function getParticipantSession(sessionId: string, userId: string) {
   });
 }
 
-function formatTime(value: Date) {
-  return new Intl.DateTimeFormat("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(value);
-}
-
 function getChatAccessState(input: {
   paymentStatus: "UNPAID" | "PENDING" | "PAID" | "FAILED" | "REFUNDED";
-  scheduledAt: Date;
-  durationMinutes: number;
   status: SessionStatus;
 }) {
   if (isSessionRequestPending({ paymentStatus: input.paymentStatus })) {
@@ -91,30 +82,23 @@ function getChatAccessState(input: {
     };
   }
 
-  const timing = getSessionTimingSnapshot({
-    scheduledAt: input.scheduledAt,
-    durationMinutes: input.durationMinutes,
-    status: input.status,
-    paymentStatus: input.paymentStatus,
-  });
-
-  if (timing.isJoinWindowOpen) {
+  if (input.paymentStatus === "PAID" && input.status === "CONFIRMED") {
     return {
       canSend: true,
-      accessMessage: "The chat is live now.",
+      accessMessage: "The chat is open and its history stays here permanently.",
     };
   }
 
-  if (timing.isUpcoming) {
+  if (input.paymentStatus === "FAILED") {
     return {
       canSend: false,
-      accessMessage: `This chat opens at ${formatTime(timing.opensAt)}.`,
+      accessMessage: "This request was declined, so the chat is read-only now.",
     };
   }
 
   return {
     canSend: false,
-    accessMessage: "This chat is closed because the conversation window has ended.",
+    accessMessage: "This chat is closed.",
   };
 }
 
@@ -127,8 +111,6 @@ export async function getSessionChatStateForUser(sessionId: string, userId: stri
 
   const access = getChatAccessState({
     paymentStatus: session.paymentStatus,
-    scheduledAt: session.scheduledAt,
-    durationMinutes: session.durationMinutes,
     status: session.status,
   });
 
@@ -158,8 +140,6 @@ export async function createSessionChatMessage(input: { sessionId: string; userI
 
   const access = getChatAccessState({
     paymentStatus: session.paymentStatus,
-    scheduledAt: session.scheduledAt,
-    durationMinutes: session.durationMinutes,
     status: session.status,
   });
 

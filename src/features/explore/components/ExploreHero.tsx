@@ -17,12 +17,12 @@ export default function ExploreHero({ filters, total }: ExploreHeroProps) {
           <p className="mb-2 text-xs font-bold uppercase tracking-[0.24em] text-primary">Explore listeners</p>
           <h1 className="text-2xl font-bold tracking-tight text-on-surface sm:text-3xl">Find a listener who is ready to connect now.</h1>
           <p className="mt-3 text-sm leading-6 text-on-surface-variant">
-            Published listeners appear here when their live availability is turned on. Browse quickly, open a profile,
-            and send a chat request when the fit feels right.
+            Published listeners stay here in explore. Browse quickly, spot who is active now, and send a chat request
+            whenever a listener has requests turned on.
           </p>
         </div>
         <div className="border border-on-surface/10 bg-surface px-3 py-3 text-sm text-on-surface-variant">
-          <span className="font-semibold text-on-surface">{total}</span> listener{total === 1 ? "" : "s"} available now
+          <span className="font-semibold text-on-surface">{total}</span> published listener{total === 1 ? "" : "s"}
         </div>
       </div>
 

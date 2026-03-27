@@ -11,7 +11,7 @@ export default async function ListenerSessionsPage() {
       sessions={sessions}
       viewerRole="LISTENER"
       title="Manage live chat requests"
-      description="Incoming requests, active chats, and old conversations all stay here so you can open the right room quickly."
+      description="Incoming requests, open chats, and older conversation history all stay here so you can open the right room quickly."
       actionHref="/listener/availability"
       actionLabel="Availability"
     />

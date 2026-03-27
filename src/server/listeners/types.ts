@@ -21,7 +21,8 @@ export type ListenerSummary = {
   about: string;
   specialties: string[];
   languages: string[];
-  isAvailableNow: boolean;
+  isAcceptingRequests: boolean;
+  isActiveNow: boolean;
 };
 
 export type ListenerDetail = ListenerSummary & {
@@ -39,7 +40,7 @@ export type BrowseListenersResult = {
 export type ListenerProfileEditorData = {
   name: string;
   avatarUrl: string | null;
-  isAvailableNow: boolean;
+  isAcceptingRequests: boolean;
   slug: string;
   headline: string;
   about: string;

@@ -1,7 +1,9 @@
 import "server-only";
 import type { Prisma, SessionPaymentStatus, SessionStatus } from "@/generated/prisma";
-import { getDefaultListenerSettings, getVisibleListenerSettingsWhere } from "@/server/availability/service";
+import { getDefaultListenerSettings } from "@/server/availability/service";
 import { prisma } from "@/server/db/client";
+
+const MAX_PENDING_REQUESTS_PER_LISTENER = 5;
 
 export type SessionCard = {
   id: string;
@@ -42,14 +44,6 @@ export type SessionDetail = {
   };
 };
 
-export type SessionTimingSnapshot = {
-  startsAt: Date;
-  opensAt: Date;
-  endsAt: Date;
-  isJoinWindowOpen: boolean;
-  isUpcoming: boolean;
-};
-
 type SessionDetailRecord = Prisma.SessionBookingGetPayload<{
   include: {
     talker: {
@@ -75,10 +69,6 @@ type SessionDetailRecord = Prisma.SessionBookingGetPayload<{
     };
   };
 }>;
-
-function addMinutes(date: Date, amount: number) {
-  return new Date(date.getTime() + amount * 60_000);
-}
 
 function mapSessionDetail(session: SessionDetailRecord): SessionDetail {
   return {
@@ -109,7 +99,7 @@ function mapSessionDetail(session: SessionDetailRecord): SessionDetail {
 
 export function getSessionConnectionLabel(paymentStatus: SessionPaymentStatus) {
   if (paymentStatus === "PAID") {
-    return "Connected";
+    return "Open";
   }
 
   if (paymentStatus === "FAILED") {
@@ -120,35 +110,17 @@ export function getSessionConnectionLabel(paymentStatus: SessionPaymentStatus) {
     return "Closed";
   }
 
-  return "Waiting for listener";
+  return "Pending";
 }
 
 export function isSessionRequestPending(input: Pick<SessionDetail | SessionCard, "paymentStatus">) {
-  return input.paymentStatus !== "PAID";
-}
-
-export function getSessionTimingSnapshot(
-  session: Pick<SessionDetail | SessionCard, "scheduledAt" | "durationMinutes" | "status" | "paymentStatus">
-): SessionTimingSnapshot {
-  const now = new Date();
-  const startsAt = session.scheduledAt;
-  const opensAt = addMinutes(startsAt, -10);
-  const endsAt = addMinutes(startsAt, session.durationMinutes);
-  const isConnected = session.paymentStatus === "PAID";
-
-  return {
-    startsAt,
-    opensAt,
-    endsAt,
-    isJoinWindowOpen: isConnected && session.status === "CONFIRMED" && now >= opensAt && now <= endsAt,
-    isUpcoming: isConnected && session.status === "CONFIRMED" && startsAt > now,
-  };
+  return input.paymentStatus === "UNPAID" || input.paymentStatus === "PENDING";
 }
 
 export function isSessionLive(
   session: Pick<SessionDetail | SessionCard, "scheduledAt" | "durationMinutes" | "status" | "paymentStatus">
 ) {
-  return getSessionTimingSnapshot(session).endsAt > new Date() && session.paymentStatus === "PAID" && session.status === "CONFIRMED";
+  return session.paymentStatus === "PAID" && session.status === "CONFIRMED";
 }
 
 export async function createConversationRequest(input: {
@@ -166,7 +138,7 @@ export async function createConversationRequest(input: {
           role: "LISTENER",
           listenerSettings: {
             is: {
-              ...getVisibleListenerSettingsWhere(),
+              acceptingNewBookings: true,
             },
           },
         },
@@ -183,7 +155,7 @@ export async function createConversationRequest(input: {
   });
 
   if (!listener) {
-    throw new Error("This listener is not available right now.");
+    throw new Error("This listener has requests turned off right now.");
   }
 
   if (listener.user.id === input.talkerId) {
@@ -206,6 +178,22 @@ export async function createConversationRequest(input: {
 
   if (existingPendingRequest) {
     throw new Error("You already have a request waiting for this listener.");
+  }
+
+  const pendingRequestCount = await prisma.sessionBooking.count({
+    where: {
+      listenerId: listener.user.id,
+      status: "CONFIRMED",
+      paymentStatus: {
+        in: ["UNPAID", "PENDING"],
+      },
+    },
+  });
+
+  if (pendingRequestCount >= MAX_PENDING_REQUESTS_PER_LISTENER) {
+    throw new Error(
+      "This listener already has the maximum number of pending requests right now. Try again after they accept one."
+    );
   }
 
   const settings = listener.user.listenerSettings ?? getDefaultListenerSettings();
@@ -446,9 +434,9 @@ export async function getListenerDashboardData(listenerId: string) {
     }),
   ]);
 
-  const pendingRequests = sessions.filter((session) => session.paymentStatus !== "PAID");
+  const pendingRequests = sessions.filter((session) => isSessionRequestPending(session));
   const activeSessions = sessions.filter((session) => isSessionLive(session));
-  const recentSessions = sessions.filter((session) => session.paymentStatus === "PAID" && !isSessionLive(session)).slice(0, 3);
+  const recentSessions = sessions.filter((session) => session.paymentStatus === "PAID").slice(0, 3);
 
   return {
     name: profileData?.name ?? "Listener",

@@ -148,9 +148,9 @@ export default function ListenerProfileEditor({ initialData }: ListenerProfileEd
               <p className="mt-2 text-sm font-semibold text-on-surface">{slug.trim() ? `/explore/${slug.trim()}` : "Set your slug"}</p>
             </div>
             <div className="bg-surface px-3 py-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-on-surface-variant">Availability</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-on-surface-variant">Requests</p>
               <p className="mt-2 text-sm font-semibold text-on-surface">
-                {initialData.isAvailableNow ? "Visible in browse" : "Hidden until you turn availability on"}
+                {initialData.isAcceptingRequests ? "Requests are on" : "Requests are off"}
               </p>
             </div>
           </div>
@@ -168,7 +168,7 @@ export default function ListenerProfileEditor({ initialData }: ListenerProfileEd
             <div>
               <p className="font-semibold text-on-surface">Publish profile</p>
               <p className="text-sm leading-6 text-on-surface-variant">
-                Published listener profiles can appear in browse whenever your availability is turned on.
+                Published listener profiles stay visible in explore, even when requests are off.
               </p>
             </div>
             <input
@@ -183,9 +183,9 @@ export default function ListenerProfileEditor({ initialData }: ListenerProfileEd
         <section className="border border-on-surface/8 bg-surface-container-lowest p-4">
           <div className="mb-4 flex items-center justify-between gap-3 border-b border-on-surface/8 pb-4">
             <p className="text-sm text-on-surface-variant">
-              {initialData.isAvailableNow
-                ? "Availability is currently on for this listener account."
-                : "Turn availability on when you want to appear in browse."}
+              {initialData.isAcceptingRequests
+                ? "Requests are currently on for this listener account."
+                : "Turn requests on when you want to receive new chats."}
             </p>
             <Link href="/listener/availability" className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
               Availability

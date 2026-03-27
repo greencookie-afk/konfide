@@ -52,14 +52,16 @@ export default async function ListenerProfilePage({
 
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
               <div className="rounded-[16px] bg-surface px-4 py-4">
-                <p className="text-sm text-on-surface-variant">Availability</p>
+                <p className="text-sm text-on-surface-variant">Activity</p>
                 <p className="mt-2 text-lg font-bold text-on-surface">
-                  {listener.isAvailableNow ? "Available now" : "Unavailable right now"}
+                  {listener.isActiveNow ? "Active now" : "Away right now"}
                 </p>
               </div>
               <div className="rounded-[16px] bg-surface px-4 py-4">
-                <p className="text-sm text-on-surface-variant">How chats begin</p>
-                <p className="mt-2 text-lg font-bold text-on-surface">Request first, chat after acceptance</p>
+                <p className="text-sm text-on-surface-variant">Requests</p>
+                <p className="mt-2 text-lg font-bold text-on-surface">
+                  {listener.isAcceptingRequests ? "On and ready to queue" : "Off right now"}
+                </p>
               </div>
             </div>
 
@@ -87,7 +89,11 @@ export default async function ListenerProfilePage({
                   </div>
                   <div className="flex items-center gap-2">
                     <CircleDot className="h-4 w-4 text-primary" />
-                    <span>{listener.isAvailableNow ? "Visible in browse right now" : "Hidden from browse right now"}</span>
+                    <span>{listener.isPublished ? "Listed in explore" : "Not published"}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CircleDot className="h-4 w-4 text-primary" />
+                    <span>{listener.isAcceptingRequests ? "Requests are on" : "Requests are off"}</span>
                   </div>
                 </div>
               </section>
@@ -124,7 +130,11 @@ export default async function ListenerProfilePage({
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-on-surface-variant">Status</span>
                   <span className="font-semibold text-on-surface">
-                    {listener.isAvailableNow ? "Accepting requests" : "Not accepting requests"}
+                    {listener.isActiveNow
+                      ? "Active now"
+                      : listener.isAcceptingRequests
+                        ? "Requests on"
+                        : "Requests off"}
                   </span>
                 </div>
                 <div className="mt-3 flex items-center justify-between gap-3">
@@ -134,13 +144,19 @@ export default async function ListenerProfilePage({
               </div>
 
               <div className="mt-5 grid gap-3">
-                <Link
-                  href={`/explore/${listener.slug}/connect`}
-                  className="inline-flex items-center justify-center gap-2 rounded-[16px] bg-primary px-5 py-3 text-sm font-semibold text-on-surface transition hover:opacity-90"
-                >
-                  Send a request
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
+                {listener.isAcceptingRequests ? (
+                  <Link
+                    href={`/explore/${listener.slug}/connect`}
+                    className="inline-flex items-center justify-center gap-2 rounded-[16px] bg-primary px-5 py-3 text-sm font-semibold text-on-surface transition hover:opacity-90"
+                  >
+                    Send a request
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                ) : (
+                  <div className="inline-flex items-center justify-center gap-2 rounded-[16px] bg-primary/35 px-5 py-3 text-sm font-semibold text-on-primary-container/70">
+                    Requests paused
+                  </div>
+                )}
                 <Link
                   href="/explore"
                   className="inline-flex items-center justify-center rounded-[16px] border border-on-primary-container/20 px-5 py-3 text-sm font-semibold text-on-primary-container transition hover:bg-white/20"
@@ -159,7 +175,7 @@ export default async function ListenerProfilePage({
                 </div>
                 <div className="flex items-start gap-3">
                   <CircleDot className="mt-0.5 h-4 w-4 text-primary" />
-                  <p>Listeners control visibility with one availability switch inside their workspace.</p>
+                  <p>Published listeners stay in explore, and the active badge only shows while they are live on site.</p>
                 </div>
               </div>
             </section>

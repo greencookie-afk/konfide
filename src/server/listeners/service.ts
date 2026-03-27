@@ -1,4 +1,5 @@
 import "server-only";
+import { isListenerActiveNow } from "@/server/availability/service";
 import {
   countPublishedListenerProfiles,
   findListenerProfileByUserId,
@@ -68,6 +69,8 @@ function normalizeSlug(value: string | undefined) {
 }
 
 function mapListener(record: Awaited<ReturnType<typeof listPublishedListenerProfiles>>[number]): ListenerSummary {
+  const isAcceptingRequests = record.user.listenerSettings?.acceptingNewBookings ?? false;
+
   return {
     userId: record.user.id,
     slug: record.slug,
@@ -77,7 +80,11 @@ function mapListener(record: Awaited<ReturnType<typeof listPublishedListenerProf
     about: record.about ?? "",
     specialties: record.specialties,
     languages: record.languages,
-    isAvailableNow: record.user.listenerSettings?.acceptingNewBookings ?? false,
+    isAcceptingRequests,
+    isActiveNow: isListenerActiveNow({
+      acceptingNewBookings: isAcceptingRequests,
+      lastActiveAt: record.user.listenerSettings?.lastActiveAt ?? null,
+    }),
   };
 }
 
@@ -86,7 +93,17 @@ function sortListeners(listeners: ListenerSummary[], sort: ListenerSort) {
     return [...listeners].sort((left, right) => left.name.localeCompare(right.name));
   }
 
-  return listeners;
+  return [...listeners].sort((left, right) => {
+    if (left.isActiveNow !== right.isActiveNow) {
+      return Number(right.isActiveNow) - Number(left.isActiveNow);
+    }
+
+    if (left.isAcceptingRequests !== right.isAcceptingRequests) {
+      return Number(right.isAcceptingRequests) - Number(left.isAcceptingRequests);
+    }
+
+    return left.name.localeCompare(right.name);
+  });
 }
 
 export function normalizeBrowseListenersInput(input: BrowseListenersInput): BrowseListenersFilters {
@@ -132,6 +149,8 @@ export async function getListenerProfile(slug: string): Promise<ListenerDetail |
     return null;
   }
 
+  const isAcceptingRequests = listener.user.listenerSettings?.acceptingNewBookings ?? false;
+
   return {
     userId: listener.user.id,
     slug: listener.slug,
@@ -141,7 +160,11 @@ export async function getListenerProfile(slug: string): Promise<ListenerDetail |
     about: listener.about ?? "",
     specialties: listener.specialties,
     languages: listener.languages,
-    isAvailableNow: listener.user.listenerSettings?.acceptingNewBookings ?? false,
+    isAcceptingRequests,
+    isActiveNow: isListenerActiveNow({
+      acceptingNewBookings: isAcceptingRequests,
+      lastActiveAt: listener.user.listenerSettings?.lastActiveAt ?? null,
+    }),
     isPublished: listener.isPublished,
   };
 }
@@ -152,7 +175,7 @@ export async function getListenerProfileEditorData(userId: string): Promise<List
   return {
     name: user?.name ?? "",
     avatarUrl: user?.avatarUrl ?? null,
-    isAvailableNow: user?.listenerSettings?.acceptingNewBookings ?? false,
+    isAcceptingRequests: user?.listenerSettings?.acceptingNewBookings ?? false,
     slug: user?.listenerProfile?.slug ?? "",
     headline: user?.listenerProfile?.headline ?? "",
     about: user?.listenerProfile?.about ?? "",

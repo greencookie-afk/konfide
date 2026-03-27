@@ -4,16 +4,6 @@ import { useEffect, useState } from "react";
 
 const HEARTBEAT_INTERVAL_MS = 60_000;
 
-function broadcastAvailability(acceptingNewBookings: boolean) {
-  window.dispatchEvent(
-    new CustomEvent("listener-availability-changed", {
-      detail: {
-        acceptingNewBookings,
-      },
-    })
-  );
-}
-
 function sendAwayBeacon() {
   if (typeof navigator === "undefined") {
     return;
@@ -103,8 +93,6 @@ export default function ListenerPresenceController({
 
       if (document.visibilityState === "hidden") {
         sendAwayBeacon();
-        setIsAvailable(false);
-        broadcastAvailability(false);
         return;
       }
 
@@ -117,8 +105,6 @@ export default function ListenerPresenceController({
       }
 
       sendAwayBeacon();
-      setIsAvailable(false);
-      broadcastAvailability(false);
     };
 
     const handleFocus = () => {

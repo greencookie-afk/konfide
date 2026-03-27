@@ -27,25 +27,14 @@ export function getListenerPresenceCutoff(now = new Date()) {
   return new Date(now.getTime() - LISTENER_AWAY_TIMEOUT_MS);
 }
 
-export function getVisibleListenerSettingsWhere(now = new Date()) {
-  return {
-    acceptingNewBookings: true,
-    lastActiveAt: {
-      gte: getListenerPresenceCutoff(now),
-    },
-  };
-}
-
-export function isListenerVisibleNow(input: {
+export function isListenerActiveNow(input: {
   acceptingNewBookings: boolean;
   lastActiveAt: Date | null;
-  isPublished?: boolean;
 }) {
   return Boolean(
     input.acceptingNewBookings &&
       input.lastActiveAt &&
-      input.lastActiveAt >= getListenerPresenceCutoff() &&
-      input.isPublished !== false
+      input.lastActiveAt >= getListenerPresenceCutoff()
   );
 }
 
@@ -73,10 +62,10 @@ export async function getListenerAvailabilityEditor(userId: string): Promise<Ava
     acceptingNewBookings: user?.listenerSettings?.acceptingNewBookings ?? false,
     isPublished: user?.listenerProfile?.isPublished ?? false,
     lastActiveAt: user?.listenerSettings?.lastActiveAt ?? null,
-    isVisibleInBrowse: isListenerVisibleNow({
+    isListedInExplore: user?.listenerProfile?.isPublished ?? false,
+    isActiveNow: isListenerActiveNow({
       acceptingNewBookings: user?.listenerSettings?.acceptingNewBookings ?? false,
       lastActiveAt: user?.listenerSettings?.lastActiveAt ?? null,
-      isPublished: user?.listenerProfile?.isPublished ?? false,
     }),
     awayTimeoutMinutes: LISTENER_AWAY_TIMEOUT_MINUTES,
   };
@@ -132,7 +121,6 @@ export async function markListenerAway(userId: string) {
       userId,
     },
     data: {
-      acceptingNewBookings: false,
       lastActiveAt: null,
     },
   });

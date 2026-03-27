@@ -2,12 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, CalendarClock, MessageSquareMore, NotebookText, UserRound } from "lucide-react";
 import AcceptSessionButton from "@/features/sessions/components/AcceptSessionButton";
-import {
-  getSessionConnectionLabel,
-  getSessionTimingSnapshot,
-  isSessionRequestPending,
-  type SessionDetail,
-} from "@/server/sessions/service";
+import { getSessionConnectionLabel, isSessionRequestPending, type SessionDetail } from "@/server/sessions/service";
 
 type SessionOverviewProps = {
   session: SessionDetail;
@@ -25,15 +20,7 @@ function formatDateTime(value: Date) {
   }).format(value);
 }
 
-function formatTime(value: Date) {
-  return new Intl.DateTimeFormat("en-IN", {
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(value);
-}
-
 export default function SessionOverview({ session, viewerRole, basePath }: SessionOverviewProps) {
-  const timing = getSessionTimingSnapshot(session);
   const counterparty = viewerRole === "TALKER" ? session.listener : session.talker;
   const counterpartySubtitle = viewerRole === "TALKER" ? session.listener.headline : session.talker.email;
   const isPending = isSessionRequestPending(session);
@@ -71,8 +58,8 @@ export default function SessionOverview({ session, viewerRole, basePath }: Sessi
             <p className="mt-2 text-base font-bold text-on-surface">{connectionLabel}</p>
           </div>
           <div className="rounded-[16px] bg-surface px-4 py-4">
-            <p className="text-sm text-on-surface-variant">Chat length</p>
-            <p className="mt-2 text-base font-bold text-on-surface">{session.durationMinutes} minutes</p>
+            <p className="text-sm text-on-surface-variant">Chat history</p>
+            <p className="mt-2 text-base font-bold text-on-surface">Stays in this room</p>
           </div>
           <div className="rounded-[16px] bg-surface px-4 py-4">
             <p className="text-sm text-on-surface-variant">Accepted</p>
@@ -91,18 +78,12 @@ export default function SessionOverview({ session, viewerRole, basePath }: Sessi
                   ? viewerRole === "LISTENER"
                     ? "Accept this request to start the chat."
                     : "Waiting for the listener to accept."
-                  : timing.isJoinWindowOpen
-                    ? "The chat is open right now."
-                    : "The live chat window has closed."}
+                  : "The chat is open and stays available."}
               </p>
               <p className="mt-1 text-sm leading-6 text-on-primary-container/80">
                 {isPending
                   ? "Nothing else is required before the conversation can begin."
-                  : timing.isJoinWindowOpen
-                    ? "You can open the chat now from the action card."
-                    : `This conversation started at ${formatDateTime(session.scheduledAt)} and ran until ${formatTime(
-                        timing.endsAt
-                      )}.`}
+                  : "Once accepted, both sides keep the same chat room and the full history remains there."}
               </p>
             </div>
           </div>

@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ChevronLeft } from "lucide-react";
 import type { SessionChatState } from "@/server/chat/service";
-import { getSessionTimingSnapshot, isSessionRequestPending, type SessionDetail } from "@/server/sessions/service";
+import { isSessionRequestPending, type SessionDetail } from "@/server/sessions/service";
 import AcceptSessionButton from "@/features/sessions/components/AcceptSessionButton";
 import SessionChatRoom from "@/features/sessions/components/SessionChatRoom";
 
@@ -36,17 +36,7 @@ function getSessionLabel(session: SessionDetail) {
     return "Pending";
   }
 
-  const timing = getSessionTimingSnapshot(session);
-
-  if (timing.isJoinWindowOpen) {
-    return "Live";
-  }
-
-  if (timing.endsAt <= new Date()) {
-    return "Ended";
-  }
-
-  return "Accepted";
+  return "Open";
 }
 
 export default function SessionChatView({
@@ -118,8 +108,6 @@ export default function SessionChatView({
 
         <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-on-surface-variant">
           <span>{subtitle}</span>
-          <span>•</span>
-          <span>{session.durationMinutes} min</span>
         </div>
 
         {session.notes?.trim() ? (

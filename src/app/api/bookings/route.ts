@@ -38,6 +38,10 @@ export async function POST(request: Request) {
     return jsonError("Invalid request payload.", 400);
   }
 
+  if (typeof payload.listenerSlug !== "string" || !payload.listenerSlug.trim()) {
+    return jsonError("Choose a listener before sending a request.", 400);
+  }
+
   try {
     const booking = await createConversationRequest({
       talkerId: user.id,

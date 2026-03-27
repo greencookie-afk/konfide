@@ -10,6 +10,7 @@ export type AvailabilityEditorData = {
   acceptingNewBookings: boolean;
   isPublished: boolean;
   lastActiveAt: Date | null;
-  isVisibleInBrowse: boolean;
+  isListedInExplore: boolean;
+  isActiveNow: boolean;
   awayTimeoutMinutes: number;
 };

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ChevronRight, MessageSquareText, NotebookPen, Radio, Settings2 } from "lucide-react";
 import BrowserNotificationCard from "@/components/shared/BrowserNotificationCard";
 import { getAccountEditorData } from "@/server/account/service";
-import { getDefaultListenerSettings, isListenerVisibleNow, LISTENER_AWAY_TIMEOUT_MINUTES } from "@/server/availability/service";
+import { getDefaultListenerSettings, isListenerActiveNow, LISTENER_AWAY_TIMEOUT_MINUTES } from "@/server/availability/service";
 import { requireUser } from "@/server/auth/server";
 import { getListenerDashboardData } from "@/server/sessions/service";
 
@@ -21,10 +21,10 @@ export default async function ListenerDashboardPage() {
   const settings = dashboard.settings ?? getDefaultListenerSettings();
   const isPublished = Boolean(dashboard.profile?.isPublished);
   const hasProfile = Boolean(dashboard.profile);
-  const isVisibleInBrowse = isListenerVisibleNow({
+  const isListedInExplore = isPublished;
+  const isActiveNow = isListenerActiveNow({
     acceptingNewBookings: settings.acceptingNewBookings,
     lastActiveAt: settings.lastActiveAt,
-    isPublished,
   });
 
   if (!account) {
@@ -44,32 +44,36 @@ export default async function ListenerDashboardPage() {
 
       <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         <article className="border border-on-surface/8 bg-surface-container-lowest p-4">
-          <p className="text-[11px] uppercase tracking-[0.18em] text-on-surface-variant">Browse visibility</p>
-          <p className="mt-2 text-2xl font-bold text-on-surface">{isVisibleInBrowse ? "Live" : "Hidden"}</p>
+          <p className="text-[11px] uppercase tracking-[0.18em] text-on-surface-variant">Explore listing</p>
+          <p className="mt-2 text-2xl font-bold text-on-surface">{isListedInExplore ? "Listed" : "Unpublished"}</p>
           <p className="mt-2 text-sm text-on-surface-variant">
-            {isVisibleInBrowse
-              ? "Users can find you right now."
-              : isPublished
-                ? "You are published, but availability or activity is missing."
-                : "Publish your listener profile first."}
+            {isListedInExplore ? "Users can keep finding your profile in explore." : "Publish your listener profile first."}
           </p>
         </article>
         <article className="border border-on-surface/8 bg-surface-container-lowest p-4">
-          <p className="text-[11px] uppercase tracking-[0.18em] text-on-surface-variant">Incoming requests</p>
-          <p className="mt-2 text-2xl font-bold text-on-surface">{dashboard.pendingRequestsCount}</p>
-          <p className="mt-2 text-sm text-on-surface-variant">Accept one request to unlock a live chat.</p>
+          <p className="text-[11px] uppercase tracking-[0.18em] text-on-surface-variant">Requests</p>
+          <p className="mt-2 text-2xl font-bold text-on-surface">{settings.acceptingNewBookings ? "On" : "Off"}</p>
+          <p className="mt-2 text-sm text-on-surface-variant">
+            {settings.acceptingNewBookings
+              ? "People can send new requests while this stays on."
+              : "Turn requests on whenever you want new chats."}
+          </p>
         </article>
         <article className="border border-on-surface/8 bg-surface-container-lowest p-4">
-          <p className="text-[11px] uppercase tracking-[0.18em] text-on-surface-variant">Active chats</p>
+          <p className="text-[11px] uppercase tracking-[0.18em] text-on-surface-variant">Open chats</p>
           <p className="mt-2 text-2xl font-bold text-on-surface">{dashboard.activeSessionsCount}</p>
           <p className="mt-2 text-sm text-on-surface-variant">
             {dashboard.totalConnectionsCount} accepted conversation{dashboard.totalConnectionsCount === 1 ? "" : "s"} overall
           </p>
         </article>
         <article className="border border-on-surface/8 bg-surface-container-lowest p-4">
-          <p className="text-[11px] uppercase tracking-[0.18em] text-on-surface-variant">Auto-away</p>
+          <p className="text-[11px] uppercase tracking-[0.18em] text-on-surface-variant">Active now</p>
           <p className="mt-2 text-2xl font-bold text-on-surface">{LISTENER_AWAY_TIMEOUT_MINUTES} min</p>
-          <p className="mt-2 text-sm text-on-surface-variant">Availability turns off if the listener workspace goes away.</p>
+          <p className="mt-2 text-sm text-on-surface-variant">
+            {isActiveNow
+              ? "You are currently showing the active now badge."
+              : "The active now badge clears after a few minutes away, but requests stay on until you turn them off."}
+          </p>
         </article>
       </section>
 
@@ -97,10 +101,12 @@ export default async function ListenerDashboardPage() {
               <span className="font-semibold text-on-surface">{isPublished ? "Published" : "Draft"}</span>
             </div>
             <div className="flex items-center justify-between bg-surface px-3 py-3">
-              <span className="text-on-surface-variant">Availability</span>
-              <span className="font-semibold text-on-surface">
-                {settings.acceptingNewBookings ? "On" : "Off"}
-              </span>
+              <span className="text-on-surface-variant">Requests</span>
+              <span className="font-semibold text-on-surface">{settings.acceptingNewBookings ? "On" : "Off"}</span>
+            </div>
+            <div className="flex items-center justify-between bg-surface px-3 py-3">
+              <span className="text-on-surface-variant">Activity</span>
+              <span className="font-semibold text-on-surface">{isActiveNow ? "Active now" : "Away"}</span>
             </div>
           </div>
 
@@ -158,7 +164,7 @@ export default async function ListenerDashboardPage() {
 
         <article className="border border-on-surface/8 bg-surface-container-lowest p-4">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg font-bold">Recent conversations</h2>
+            <h2 className="text-lg font-bold">Open conversations</h2>
             <Link href="/listener/sessions" className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-primary">
               <MessageSquareText className="h-3.5 w-3.5" />
               View all
@@ -170,12 +176,12 @@ export default async function ListenerDashboardPage() {
                 <div key={session.id} className="border border-on-surface/8 bg-surface px-3 py-3">
                   <p className="font-semibold text-on-surface">{session.talker.name ?? "Konfide member"}</p>
                   <p className="mt-1 text-sm text-on-surface-variant">{session.topic || "Support conversation"}</p>
-                  <p className="mt-2 text-sm text-on-surface-variant">Started {formatDateTime(session.scheduledAt)}</p>
+                  <p className="mt-2 text-sm text-on-surface-variant">Opened {formatDateTime(session.paidAt ?? session.scheduledAt)}</p>
                 </div>
               ))
             ) : (
               <div className="border border-dashed border-on-surface/10 bg-surface px-4 py-5 text-sm text-on-surface-variant">
-                Conversations you have already accepted will appear here.
+                Chats you have already accepted will appear here.
               </div>
             )}
           </div>

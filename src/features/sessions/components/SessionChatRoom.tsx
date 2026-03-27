@@ -185,7 +185,7 @@ export default function SessionChatRoom({ sessionId, currentUserId, initialState
             <p className="text-[12px] text-red-700">{error}</p>
           ) : (
             <p className="text-[11px] uppercase tracking-[0.18em] text-on-surface-variant">
-              {canSend ? "Live now" : "Locked"}
+              {canSend ? "Open" : "Locked"}
             </p>
           )}
           <button

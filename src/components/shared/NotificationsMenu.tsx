@@ -32,15 +32,20 @@ function readSeenIds(storageKey: string) {
 
 export default function NotificationsMenu({ notifications, storageKey }: NotificationsMenuProps) {
   const detailsRef = useRef<HTMLDetailsElement>(null);
+  const [liveNotifications, setLiveNotifications] = useState(notifications);
   const [seenIds, setSeenIds] = useState<string[]>([]);
 
   useEffect(() => {
     setSeenIds(readSeenIds(storageKey));
   }, [storageKey]);
 
+  useEffect(() => {
+    setLiveNotifications(notifications);
+  }, [notifications]);
+
   const unreadNotifications = useMemo(
-    () => notifications.filter((notification) => !seenIds.includes(notification.id)),
-    [notifications, seenIds]
+    () => liveNotifications.filter((notification) => !seenIds.includes(notification.id)),
+    [liveNotifications, seenIds]
   );
   const count = unreadNotifications.length;
 
@@ -61,8 +66,59 @@ export default function NotificationsMenu({ notifications, storageKey }: Notific
   };
 
   const markAllRead = () => {
-    persistSeenIds([...new Set([...seenIds, ...notifications.map((notification) => notification.id)])]);
+    persistSeenIds([...new Set([...seenIds, ...liveNotifications.map((notification) => notification.id)])]);
   };
+
+  useEffect(() => {
+    let isMounted = true;
+    const details = detailsRef.current;
+
+    const refreshNotifications = async () => {
+      try {
+        const response = await fetch("/api/notifications", {
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          return;
+        }
+
+        const payload = (await response.json()) as NavbarNotification[];
+
+        if (isMounted) {
+          setLiveNotifications(Array.isArray(payload) ? payload : []);
+        }
+      } catch {
+        // Keep the last good notification state if refresh fails.
+      }
+    };
+
+    const refreshIfVisible = () => {
+      if (document.visibilityState === "visible") {
+        void refreshNotifications();
+      }
+    };
+
+    const handleToggle = () => {
+      if (detailsRef.current?.open) {
+        void refreshNotifications();
+      }
+    };
+
+    const intervalId = window.setInterval(refreshIfVisible, 10_000);
+
+    window.addEventListener("focus", refreshIfVisible);
+    document.addEventListener("visibilitychange", refreshIfVisible);
+    details?.addEventListener("toggle", handleToggle);
+
+    return () => {
+      isMounted = false;
+      window.clearInterval(intervalId);
+      window.removeEventListener("focus", refreshIfVisible);
+      document.removeEventListener("visibilitychange", refreshIfVisible);
+      details?.removeEventListener("toggle", handleToggle);
+    };
+  }, []);
 
   useEffect(() => {
     const handlePointerDown = (event: PointerEvent) => {
@@ -125,7 +181,7 @@ export default function NotificationsMenu({ notifications, storageKey }: Notific
                 {count ? `${count} unread update${count === 1 ? "" : "s"}` : "Everything is read"}
               </p>
             </div>
-            {notifications.length ? (
+            {liveNotifications.length ? (
               <button
                 type="button"
                 onClick={markAllRead}
@@ -138,9 +194,9 @@ export default function NotificationsMenu({ notifications, storageKey }: Notific
           </div>
         </div>
 
-        {notifications.length ? (
+        {liveNotifications.length ? (
           <div className="max-h-[min(30rem,calc(100svh-6rem))] space-y-2 overflow-y-auto p-2">
-            {notifications.map((notification, index) => {
+            {liveNotifications.map((notification, index) => {
               const isAction = notification.tone === "action";
               const isUnread = !seenIds.includes(notification.id);
 

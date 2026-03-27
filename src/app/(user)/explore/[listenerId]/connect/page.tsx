@@ -39,7 +39,8 @@ export default async function ConnectPage({
             headline: listener.headline,
             specialties: listener.specialties,
             languages: listener.languages,
-            isAvailableNow: listener.isAvailableNow,
+            isAcceptingRequests: listener.isAcceptingRequests,
+            isActiveNow: listener.isActiveNow,
           }}
         />
       </main>

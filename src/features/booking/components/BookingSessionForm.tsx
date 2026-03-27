@@ -13,7 +13,8 @@ type BookingSessionFormProps = {
     headline: string;
     specialties: string[];
     languages: string[];
-    isAvailableNow: boolean;
+    isAcceptingRequests: boolean;
+    isActiveNow: boolean;
   };
 };
 
@@ -32,8 +33,8 @@ export default function BookingSessionForm({ canRequest, listener }: BookingSess
       return;
     }
 
-    if (!listener.isAvailableNow) {
-      setError("This listener is not accepting live requests right now.");
+    if (!listener.isAcceptingRequests) {
+      setError("This listener has requests turned off right now.");
       return;
     }
 
@@ -127,9 +128,9 @@ export default function BookingSessionForm({ canRequest, listener }: BookingSess
 
           <div className="mt-6 space-y-3 rounded-[16px] bg-surface px-4 py-4 text-sm">
             <div className="flex items-center justify-between gap-3">
-              <span className="text-on-surface-variant">Availability</span>
+              <span className="text-on-surface-variant">Status</span>
               <span className="font-semibold text-on-surface">
-                {listener.isAvailableNow ? "Available now" : "Unavailable"}
+                {listener.isActiveNow ? "Active now" : listener.isAcceptingRequests ? "Requests on" : "Requests off"}
               </span>
             </div>
             <div className="flex items-start justify-between gap-3">
@@ -163,7 +164,7 @@ export default function BookingSessionForm({ canRequest, listener }: BookingSess
 
           <button
             type="submit"
-            disabled={isPending || !canRequest || !listener.isAvailableNow}
+            disabled={isPending || !canRequest || !listener.isAcceptingRequests}
             className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-[14px] bg-primary px-5 py-3 text-sm font-semibold text-on-surface transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isPending ? <LoaderCircle className="h-4 w-4 animate-spin" /> : null}
@@ -187,7 +188,7 @@ export default function BookingSessionForm({ canRequest, listener }: BookingSess
             <div>
               <p className="text-sm font-semibold text-on-surface">No scheduling friction</p>
               <p className="text-sm leading-6 text-on-surface-variant">
-                If the listener is available, you can request a chat immediately and wait for them to accept.
+                If requests are on, you can send one now even when the listener is briefly away from the site.
               </p>
             </div>
           </div>

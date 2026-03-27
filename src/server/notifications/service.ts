@@ -48,7 +48,7 @@ async function getTalkerNotifications(userId: string): Promise<NavbarNotificatio
         : `Waiting on ${session.listener.name ?? "your listener"}`,
     description:
       session.paymentStatus === "PAID"
-        ? `Chat started ${formatDateTime(session.scheduledAt)}`
+        ? `Chat opened ${formatDateTime(session.paidAt ?? session.scheduledAt)}`
         : `Request sent ${formatDateTime(session.createdAt)}`,
     href: `/sessions/${session.id}/chat`,
     timestamp: (session.paidAt ?? session.createdAt).toISOString(),
@@ -105,7 +105,7 @@ async function getListenerNotifications(userId: string): Promise<NavbarNotificat
     notifications.push({
       id: "listener-profile",
       title: "Update your public profile",
-      description: "Save a public slug and publish the listing whenever you want to appear in browse.",
+      description: "Save a public slug and publish the listing whenever you want to appear in explore.",
       href: "/listener/profile",
       timestamp: null,
       tone: "action",
@@ -115,8 +115,8 @@ async function getListenerNotifications(userId: string): Promise<NavbarNotificat
   if (!settings?.acceptingNewBookings) {
     notifications.push({
       id: "listener-availability",
-      title: "You are hidden from browse",
-      description: "Turn on your availability button when you are ready to accept live chat requests.",
+      title: "Requests are turned off",
+      description: "Turn requests back on when you are ready to receive new chat requests.",
       href: "/listener/availability",
       timestamp: null,
       tone: "action",

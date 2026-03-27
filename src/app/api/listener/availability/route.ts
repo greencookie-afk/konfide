@@ -36,6 +36,10 @@ export async function PUT(request: Request) {
     return jsonError("Invalid availability request.", 400);
   }
 
+  if (typeof payload.acceptingNewBookings !== "boolean") {
+    return jsonError("Choose whether requests should be on or off.", 400);
+  }
+
   try {
     await replaceListenerAvailability(user.id, payload);
     revalidatePath("/explore");
