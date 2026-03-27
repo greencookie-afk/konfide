@@ -1,9 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight, MessageSquareText } from "lucide-react";
-import type { SessionPaymentStatus } from "@/generated/prisma";
 import AcceptSessionButton from "@/features/sessions/components/AcceptSessionButton";
-import type { SessionCard } from "@/server/sessions/service";
+import {
+  getConversationStateLabel,
+  type ConversationState,
+  type SessionCard,
+} from "@/server/sessions/service";
 
 type SessionInboxProps = {
   sessions: SessionCard[];
@@ -28,7 +31,7 @@ function buildChatHref(viewerRole: "TALKER" | "LISTENER", sessionId: string) {
 }
 
 function getSessionState(session: SessionCard) {
-  if (session.paymentStatus === "FAILED") {
+  if (session.requestState === "DECLINED") {
     return {
       label: "Declined",
       tone: "muted" as const,
@@ -36,7 +39,7 @@ function getSessionState(session: SessionCard) {
     };
   }
 
-  if (session.paymentStatus === "REFUNDED") {
+  if (session.requestState === "CLOSED") {
     return {
       label: "Closed",
       tone: "muted" as const,
@@ -44,27 +47,27 @@ function getSessionState(session: SessionCard) {
     };
   }
 
-  if (session.paymentStatus !== "PAID") {
+  if (session.requestState !== "OPEN") {
     return {
       label: "Pending",
       tone: "pending" as const,
-      meta: `Requested ${formatDateTime(session.createdAt)}`,
+      meta: `Requested ${formatDateTime(session.requestedAt)}`,
     };
   }
 
   return {
     label: "Open",
     tone: "connected" as const,
-    meta: `Opened ${formatDateTime(session.acceptedAt ?? session.scheduledAt)}`,
+    meta: `Opened ${formatDateTime(session.openedAt ?? session.requestedAt)}`,
   };
 }
 
-function getStatusClass(tone: "pending" | "connected" | "muted", paymentStatus: SessionPaymentStatus) {
+function getStatusClass(tone: "pending" | "connected" | "muted", requestState: ConversationState) {
   if (tone === "connected") {
     return "bg-primary-container text-on-primary-container";
   }
 
-  if (paymentStatus === "FAILED") {
+  if (requestState === "DECLINED") {
     return "bg-red-50 text-red-700";
   }
 
@@ -153,10 +156,10 @@ export default function SessionInbox({
                       <span
                         className={`px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${getStatusClass(
                           state.tone,
-                          session.paymentStatus
+                          session.requestState
                         )}`}
                       >
-                        {state.label}
+                        {getConversationStateLabel(session.requestState)}
                       </span>
                     </div>
                     <p className="mt-1 text-sm text-on-surface">{session.topic || "Support conversation"}</p>
@@ -165,7 +168,7 @@ export default function SessionInbox({
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2 lg:justify-end">
-                  {viewerRole === "LISTENER" && state.label === "Pending" ? (
+                  {viewerRole === "LISTENER" && session.requestState === "PENDING" ? (
                     <AcceptSessionButton
                       sessionId={session.id}
                       redirectTo={chatHref}

@@ -1,7 +1,7 @@
 import "server-only";
 import type { UserRole } from "@/generated/prisma";
 import { prisma } from "@/server/db/client";
-import { getSessionConnectionLabel } from "@/server/sessions/service";
+import { getConversationState, getConversationStateLabel } from "@/server/sessions/service";
 
 export type NavbarNotification = {
   id: string;
@@ -43,12 +43,12 @@ async function getTalkerNotifications(userId: string): Promise<NavbarNotificatio
   return sessions.map((session) => ({
     id: session.id,
     title:
-      session.paymentStatus === "PAID"
+      getConversationState(session) === "OPEN"
         ? `${session.listener.name ?? "Your listener"} accepted your request`
         : `Waiting on ${session.listener.name ?? "your listener"}`,
     description:
-      session.paymentStatus === "PAID"
-        ? `Chat opened ${formatDateTime(session.paidAt ?? session.scheduledAt)}`
+      getConversationState(session) === "OPEN"
+        ? `Chat opened ${formatDateTime(session.paidAt ?? session.createdAt)}`
         : `Request sent ${formatDateTime(session.createdAt)}`,
     href: `/sessions/${session.id}/chat`,
     timestamp: (session.paidAt ?? session.createdAt).toISOString(),
@@ -127,7 +127,7 @@ async function getListenerNotifications(userId: string): Promise<NavbarNotificat
     ...pendingRequests.map((session) => ({
       id: session.id,
       title: `New request from ${session.talker.name ?? "a Konfide member"}`,
-      description: `${getSessionConnectionLabel(session.paymentStatus)} · ${formatDateTime(session.createdAt)}`,
+      description: `${getConversationStateLabel(getConversationState(session))} · ${formatDateTime(session.createdAt)}`,
       href: `/listener/sessions/${session.id}/chat`,
       timestamp: session.createdAt.toISOString(),
       tone: "session" as const,

@@ -2,7 +2,7 @@ import "server-only";
 import type { SessionStatus, UserRole } from "@/generated/prisma";
 import { decryptChatBodyForDisplay, encryptChatBody, isEncryptedChatBody } from "@/server/chat/encryption";
 import { prisma } from "@/server/db/client";
-import { isSessionRequestPending } from "@/server/sessions/service";
+import { getConversationState } from "@/server/sessions/service";
 
 export type SessionChatMessageView = {
   id: string;
@@ -97,21 +97,23 @@ function getChatAccessState(input: {
   paymentStatus: "UNPAID" | "PENDING" | "PAID" | "FAILED" | "REFUNDED";
   status: SessionStatus;
 }) {
-  if (isSessionRequestPending({ paymentStatus: input.paymentStatus })) {
+  const conversationState = getConversationState(input);
+
+  if (conversationState === "PENDING") {
     return {
       canSend: false,
       accessMessage: "This chat opens as soon as the listener accepts your request.",
     };
   }
 
-  if (input.paymentStatus === "PAID" && input.status === "CONFIRMED") {
+  if (conversationState === "OPEN") {
     return {
       canSend: true,
       accessMessage: "The chat is open and its history stays here permanently.",
     };
   }
 
-  if (input.paymentStatus === "FAILED") {
+  if (conversationState === "DECLINED") {
     return {
       canSend: false,
       accessMessage: "This request was declined, so the chat is read-only now.",

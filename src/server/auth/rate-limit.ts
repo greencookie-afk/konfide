@@ -1,6 +1,12 @@
 import "server-only";
 import { prisma } from "@/server/db/client";
 
+const RATE_LIMIT_CLEANUP_INTERVAL_MS = 5 * 60 * 1000;
+
+const globalForRateLimit = globalThis as typeof globalThis & {
+  lastRateLimitCleanupAt?: number;
+};
+
 export function getRequestFingerprint(request: Request) {
   const forwardedFor = request.headers.get("x-forwarded-for");
   const realIp = request.headers.get("x-real-ip");
@@ -15,13 +21,19 @@ export async function enforceRateLimit(action: string, key: string, limit: numbe
   const bucketStart = new Date(Math.floor(now.getTime() / windowMs) * windowMs);
   const expiresAt = new Date(bucketStart.getTime() + windowMs);
 
-  await prisma.authRateLimitBucket.deleteMany({
-    where: {
-      expiresAt: {
-        lt: now,
+  const lastCleanupAt = globalForRateLimit.lastRateLimitCleanupAt ?? 0;
+
+  if (now.getTime() - lastCleanupAt >= RATE_LIMIT_CLEANUP_INTERVAL_MS) {
+    globalForRateLimit.lastRateLimitCleanupAt = now.getTime();
+
+    await prisma.authRateLimitBucket.deleteMany({
+      where: {
+        expiresAt: {
+          lt: now,
+        },
       },
-    },
-  });
+    });
+  }
 
   const bucket = await prisma.authRateLimitBucket.upsert({
     where: {

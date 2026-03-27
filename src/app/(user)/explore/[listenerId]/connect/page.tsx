@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Footer from "@/components/shared/Footer";
 import Navbar from "@/components/shared/Navbar";
-import BookingSessionForm from "@/features/booking/components/BookingSessionForm";
+import ConversationRequestForm from "@/features/requests/components/ConversationRequestForm";
 import { getCurrentUser } from "@/server/auth/server";
 import { getListenerProfile } from "@/server/listeners/service";
 
@@ -30,8 +30,8 @@ export default async function ConnectPage({
           </p>
         </section>
 
-        <BookingSessionForm
-          canRequest={currentUser?.role === "TALKER"}
+        <ConversationRequestForm
+          canSendRequest={currentUser?.role === "TALKER"}
           listener={{
             slug: listener.slug,
             name: listener.name,

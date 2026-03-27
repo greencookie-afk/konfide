@@ -2,6 +2,10 @@
 
 A peer-support platform where people browse live listener profiles, send a request, and start chatting once a listener accepts.
 
+## Specification
+
+The authoritative product requirements live in [docs/SRS.md](docs/SRS.md). The current app contract is a live request-and-chat system, not a paid appointment-booking product.
+
 ## Tech Stack
 
 | Layer | Technology |
@@ -59,6 +63,7 @@ Required variables:
 
 - `DATABASE_URL`
 - `AUTH_SECRET`
+- `CHAT_ENCRYPTION_KEY`
 - `GOOGLE_CLIENT_ID`
 - `GOOGLE_CLIENT_SECRET`
 

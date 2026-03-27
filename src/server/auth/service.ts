@@ -53,10 +53,10 @@ export function sanitizeUser(user: PublicUser) {
 }
 
 export function validateAuthPayload(payload: AuthPayload, isSignUp: boolean) {
-  const email = payload.email?.trim().toLowerCase();
-  const password = payload.password ?? "";
-  const name = payload.name?.trim();
-  const role = parseRole(payload.role);
+  const email = typeof payload.email === "string" ? payload.email.trim().toLowerCase() : undefined;
+  const password = typeof payload.password === "string" ? payload.password : "";
+  const name = typeof payload.name === "string" ? payload.name.trim() : undefined;
+  const role = typeof payload.role === "string" ? parseRole(payload.role) : null;
 
   if (!role) {
     return { error: "Choose whether you need to talk or want to listen." };

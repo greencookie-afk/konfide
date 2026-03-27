@@ -4,8 +4,8 @@ import Image from "next/image";
 import { useState, useTransition } from "react";
 import { LoaderCircle, MessageSquareMore, Sparkles } from "lucide-react";
 
-type BookingSessionFormProps = {
-  canRequest: boolean;
+type ConversationRequestFormProps = {
+  canSendRequest: boolean;
   listener: {
     slug: string;
     name: string;
@@ -18,7 +18,10 @@ type BookingSessionFormProps = {
   };
 };
 
-export default function BookingSessionForm({ canRequest, listener }: BookingSessionFormProps) {
+export default function ConversationRequestForm({
+  canSendRequest,
+  listener,
+}: ConversationRequestFormProps) {
   const [topic, setTopic] = useState("");
   const [notes, setNotes] = useState("");
   const [error, setError] = useState("");
@@ -28,7 +31,7 @@ export default function BookingSessionForm({ canRequest, listener }: BookingSess
     event.preventDefault();
     setError("");
 
-    if (!canRequest) {
+    if (!canSendRequest) {
       setError("Sign in with a talker account before sending a request.");
       return;
     }
@@ -40,7 +43,7 @@ export default function BookingSessionForm({ canRequest, listener }: BookingSess
 
     startTransition(async () => {
       try {
-        const response = await fetch("/api/bookings", {
+        const response = await fetch("/api/requests", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -51,19 +54,24 @@ export default function BookingSessionForm({ canRequest, listener }: BookingSess
             notes,
           }),
         });
-        const payload = (await response.json()) as { error?: string; bookingId?: string };
+        const payload = (await response.json()) as {
+          error?: string;
+          requestId?: string;
+          sessionId?: string;
+        };
+        const conversationId = payload.requestId ?? payload.sessionId;
 
         if (!response.ok) {
           setError(payload.error || "We could not send your request.");
           return;
         }
 
-        if (!payload.bookingId) {
+        if (!conversationId) {
           setError("Your request was sent, but we could not open the conversation page.");
           return;
         }
 
-        window.location.assign(`/sessions/${payload.bookingId}`);
+        window.location.assign(`/sessions/${conversationId}`);
       } catch {
         setError("We could not send your request right now.");
       }
@@ -104,7 +112,7 @@ export default function BookingSessionForm({ canRequest, listener }: BookingSess
         </div>
 
         <div className="mt-6 rounded-[16px] border border-primary/10 bg-primary-container/35 px-4 py-4 text-sm text-on-primary-container">
-          Once the listener accepts, the chat opens immediately for both of you on the shared session page.
+          Once the listener accepts, the chat opens immediately for both of you in the same permanent conversation.
         </div>
       </section>
 
@@ -164,11 +172,11 @@ export default function BookingSessionForm({ canRequest, listener }: BookingSess
 
           <button
             type="submit"
-            disabled={isPending || !canRequest || !listener.isAcceptingRequests}
+            disabled={isPending || !canSendRequest || !listener.isAcceptingRequests}
             className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-[14px] bg-primary px-5 py-3 text-sm font-semibold text-on-surface transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isPending ? <LoaderCircle className="h-4 w-4 animate-spin" /> : null}
-            {canRequest ? "Send chat request" : "Preview only"}
+            {canSendRequest ? "Send conversation request" : "Preview only"}
           </button>
         </section>
 
@@ -179,7 +187,7 @@ export default function BookingSessionForm({ canRequest, listener }: BookingSess
               <p className="font-semibold text-on-surface">How this works</p>
               <p className="mt-1 text-sm leading-6 text-on-surface-variant">
                 Requests stay lightweight. You share your topic, the listener accepts when ready, and the conversation
-                begins in the same chat space.
+                continues in the same chat space.
               </p>
             </div>
           </div>

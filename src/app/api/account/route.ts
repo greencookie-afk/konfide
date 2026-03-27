@@ -39,6 +39,25 @@ export async function PUT(request: Request) {
     return jsonError("Invalid profile request.", 400);
   }
 
+  if (payload.name !== undefined && typeof payload.name !== "string") {
+    return jsonError("Display name must be plain text.", 400);
+  }
+
+  if (
+    payload.browserNotificationsEnabled !== undefined &&
+    typeof payload.browserNotificationsEnabled !== "boolean"
+  ) {
+    return jsonError("Notification preference must be true or false.", 400);
+  }
+
+  if (
+    payload.browserNotificationPermission !== undefined &&
+    payload.browserNotificationPermission !== null &&
+    typeof payload.browserNotificationPermission !== "string"
+  ) {
+    return jsonError("Notification permission must be a text value.", 400);
+  }
+
   try {
     await updateAccountEditorData(user.id, payload);
 

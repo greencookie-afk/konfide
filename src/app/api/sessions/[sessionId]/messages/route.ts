@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { enforceRateLimit, getRequestFingerprint } from "@/server/auth/rate-limit";
 import { getSessionUserFromRequest } from "@/server/auth/service";
 import { createSessionChatMessage, getSessionChatStateForUser } from "@/server/chat/service";
 import { getUntrustedOriginMessage, isTrustedMutationOrigin } from "@/server/security/origin";
@@ -67,6 +68,26 @@ export async function POST(
 
   try {
     const { sessionId } = await params;
+    const rateLimit = await enforceRateLimit(
+      "chat-message",
+      `${getRequestFingerprint(request)}:${user.id}:${sessionId}`,
+      45,
+      60 * 1000
+    );
+
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: "Too many messages sent too quickly. Please slow down for a moment." },
+        {
+          status: 429,
+          headers: {
+            "Cache-Control": "no-store",
+            "Retry-After": String(rateLimit.retryAfterSeconds),
+          },
+        }
+      );
+    }
+
     const created = await createSessionChatMessage({
       sessionId,
       userId: user.id,

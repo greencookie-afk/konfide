@@ -2,7 +2,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { ChevronLeft } from "lucide-react";
 import type { SessionChatState } from "@/server/chat/service";
-import { isSessionRequestPending, type SessionDetail } from "@/server/sessions/service";
+import {
+  getConversationStateLabel,
+  isConversationPending,
+  type SessionDetail,
+} from "@/server/sessions/service";
 import AcceptSessionButton from "@/features/sessions/components/AcceptSessionButton";
 import SessionChatRoom from "@/features/sessions/components/SessionChatRoom";
 
@@ -23,22 +27,6 @@ function formatDateTime(value: Date) {
   }).format(value);
 }
 
-function getSessionLabel(session: SessionDetail) {
-  if (session.paymentStatus === "FAILED") {
-    return "Declined";
-  }
-
-  if (session.paymentStatus === "REFUNDED") {
-    return "Closed";
-  }
-
-  if (isSessionRequestPending(session)) {
-    return "Pending";
-  }
-
-  return "Open";
-}
-
 export default function SessionChatView({
   session,
   viewerRole,
@@ -47,14 +35,14 @@ export default function SessionChatView({
   initialChatState,
 }: SessionChatViewProps) {
   const counterparty = viewerRole === "TALKER" ? session.listener : session.talker;
-  const isPending = isSessionRequestPending(session);
-  const sessionLabel = getSessionLabel(session);
+  const isPending = isConversationPending(session);
+  const sessionLabel = getConversationStateLabel(session.requestState);
   const chatHref = `${basePath}/${session.id}/chat`;
   const subtitle = isPending
     ? viewerRole === "LISTENER"
       ? "Accept to unlock the chat."
       : "Waiting for acceptance."
-    : `${sessionLabel} · ${formatDateTime(session.acceptedAt ?? session.scheduledAt)}`;
+    : `${sessionLabel} · ${formatDateTime(session.openedAt ?? session.requestedAt)}`;
 
   return (
     <div className="overflow-hidden border border-on-surface/8 bg-surface-container-lowest">

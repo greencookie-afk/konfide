@@ -201,6 +201,22 @@ export async function saveListenerProfile(userId: string, input: ListenerProfile
     throw new Error("That public profile URL is already taken.");
   }
 
+  if (headline && headline.length > 120) {
+    throw new Error("Keep your headline under 120 characters.");
+  }
+
+  if (about && about.length > 2000) {
+    throw new Error("Keep your about section under 2000 characters.");
+  }
+
+  if (specialties.length > 12 || specialties.some((value) => value.length > 40)) {
+    throw new Error("Add up to 12 specialties and keep each one under 40 characters.");
+  }
+
+  if (languages.length > 8 || languages.some((value) => value.length > 30)) {
+    throw new Error("Add up to 8 languages and keep each one under 30 characters.");
+  }
+
   return upsertListenerProfile(userId, {
     slug,
     headline,

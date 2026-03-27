@@ -11,9 +11,6 @@ export const LISTENER_AWAY_TIMEOUT_MS = LISTENER_AWAY_TIMEOUT_MINUTES * 60_000;
 
 function mapSettings(settings: ListenerSettings | null | undefined): ListenerSettingsSnapshot {
   return {
-    timezone: settings?.timezone ?? DEFAULT_TIMEZONE,
-    defaultSessionMinutes: settings?.defaultSessionMinutes ?? DEFAULT_SESSION_MINUTES,
-    bufferMinutes: settings?.bufferMinutes ?? DEFAULT_BUFFER_MINUTES,
     acceptingNewBookings: settings?.acceptingNewBookings ?? false,
     lastActiveAt: settings?.lastActiveAt ?? null,
   };
@@ -77,22 +74,15 @@ export async function replaceListenerAvailability(
     acceptingNewBookings?: boolean;
   }
 ) {
-  const existingSettings = await prisma.listenerSettings.findUnique({
-    where: {
-      userId,
-    },
-  });
-  const snapshot = mapSettings(existingSettings);
-
   await prisma.listenerSettings.upsert({
     where: {
       userId,
     },
     create: {
       userId,
-      timezone: snapshot.timezone,
-      defaultSessionMinutes: snapshot.defaultSessionMinutes,
-      bufferMinutes: snapshot.bufferMinutes,
+      timezone: DEFAULT_TIMEZONE,
+      defaultSessionMinutes: DEFAULT_SESSION_MINUTES,
+      bufferMinutes: DEFAULT_BUFFER_MINUTES,
       acceptingNewBookings: Boolean(input.acceptingNewBookings),
       lastActiveAt: input.acceptingNewBookings ? new Date() : null,
     },

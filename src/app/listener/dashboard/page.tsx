@@ -61,7 +61,7 @@ export default async function ListenerDashboardPage() {
         </article>
         <article className="border border-on-surface/8 bg-surface-container-lowest p-4">
           <p className="text-[11px] uppercase tracking-[0.18em] text-on-surface-variant">Open chats</p>
-          <p className="mt-2 text-2xl font-bold text-on-surface">{dashboard.activeSessionsCount}</p>
+          <p className="mt-2 text-2xl font-bold text-on-surface">{dashboard.openConversationsCount}</p>
           <p className="mt-2 text-sm text-on-surface-variant">
             {dashboard.totalConnectionsCount} accepted conversation{dashboard.totalConnectionsCount === 1 ? "" : "s"} overall
           </p>
@@ -147,11 +147,11 @@ export default async function ListenerDashboardPage() {
           </div>
           <div className="mt-4 space-y-2">
             {dashboard.pendingRequests.length ? (
-              dashboard.pendingRequests.map((session) => (
-                <div key={session.id} className="border border-on-surface/8 bg-surface px-3 py-3">
-                  <p className="font-semibold text-on-surface">{session.talker.name ?? "Konfide member"}</p>
-                  <p className="mt-1 text-sm text-on-surface-variant">{session.topic || "Support conversation"}</p>
-                  <p className="mt-2 text-sm text-on-surface-variant">Sent {formatDateTime(session.createdAt)}</p>
+              dashboard.pendingRequests.map((conversation) => (
+                <div key={conversation.id} className="border border-on-surface/8 bg-surface px-3 py-3">
+                  <p className="font-semibold text-on-surface">{conversation.talkerName}</p>
+                  <p className="mt-1 text-sm text-on-surface-variant">{conversation.topic || "Support conversation"}</p>
+                  <p className="mt-2 text-sm text-on-surface-variant">Sent {formatDateTime(conversation.requestedAt)}</p>
                 </div>
               ))
             ) : (
@@ -171,12 +171,12 @@ export default async function ListenerDashboardPage() {
             </Link>
           </div>
           <div className="mt-4 space-y-2">
-            {dashboard.recentSessions.length ? (
-              dashboard.recentSessions.map((session) => (
-                <div key={session.id} className="border border-on-surface/8 bg-surface px-3 py-3">
-                  <p className="font-semibold text-on-surface">{session.talker.name ?? "Konfide member"}</p>
-                  <p className="mt-1 text-sm text-on-surface-variant">{session.topic || "Support conversation"}</p>
-                  <p className="mt-2 text-sm text-on-surface-variant">Opened {formatDateTime(session.paidAt ?? session.scheduledAt)}</p>
+            {dashboard.openConversations.length ? (
+              dashboard.openConversations.map((conversation) => (
+                <div key={conversation.id} className="border border-on-surface/8 bg-surface px-3 py-3">
+                  <p className="font-semibold text-on-surface">{conversation.talkerName}</p>
+                  <p className="mt-1 text-sm text-on-surface-variant">{conversation.topic || "Support conversation"}</p>
+                  <p className="mt-2 text-sm text-on-surface-variant">Opened {formatDateTime(conversation.openedAt ?? conversation.requestedAt)}</p>
                 </div>
               ))
             ) : (

@@ -83,6 +83,24 @@ function getCallbackUrl(request: Request) {
   return `${getBaseUrl(request)}/api/auth/google/callback`;
 }
 
+function normalizeGoogleAvatarUrl(value: string | undefined) {
+  if (!value) {
+    return null;
+  }
+
+  try {
+    const url = new URL(value);
+
+    if (url.protocol !== "https:" || url.hostname !== "lh3.googleusercontent.com") {
+      return null;
+    }
+
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
+
 function readGoogleState(state: string | null) {
   const payload = verifySignedToken<GoogleStatePayload>(state || undefined);
 
@@ -242,6 +260,7 @@ export async function finishGoogleAuth(request: Request) {
   try {
     const token = await exchangeGoogleCode(request, code, statePayload.codeVerifier);
     const profile = await fetchGoogleUserInfo(token.access_token);
+    const avatarUrl = normalizeGoogleAvatarUrl(profile.picture);
 
     if (!profile.sub || !profile.email || profile.email_verified !== true) {
       throw new Error("Google did not return a verified email address.");
@@ -283,7 +302,7 @@ export async function finishGoogleAuth(request: Request) {
           data: {
             googleSubject: profile.sub,
             emailVerified: true,
-            avatarUrl: profile.picture || emailMatch.avatarUrl,
+            avatarUrl: avatarUrl || emailMatch.avatarUrl,
             name: emailMatch.name || profile.name || null,
           },
         });
@@ -301,7 +320,7 @@ export async function finishGoogleAuth(request: Request) {
             emailVerified: true,
             googleSubject: profile.sub,
             name: profile.name || null,
-            avatarUrl: profile.picture || null,
+            avatarUrl,
             role: intendedRole,
           },
         });

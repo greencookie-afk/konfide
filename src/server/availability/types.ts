@@ -1,7 +1,4 @@
 export type ListenerSettingsSnapshot = {
-  timezone: string;
-  defaultSessionMinutes: number;
-  bufferMinutes: number;
   acceptingNewBookings: boolean;
   lastActiveAt: Date | null;
 };

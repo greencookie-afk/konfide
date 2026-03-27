@@ -1,32 +1,27 @@
 import "server-only";
 import type { Prisma, SessionPaymentStatus, SessionStatus } from "@/generated/prisma";
-import { getDefaultListenerSettings } from "@/server/availability/service";
 import { prisma } from "@/server/db/client";
 
 const MAX_PENDING_REQUESTS_PER_LISTENER = 5;
+
+export type ConversationState = "PENDING" | "OPEN" | "DECLINED" | "CLOSED";
 
 export type SessionCard = {
   id: string;
   counterpartyName: string;
   counterpartyAvatarUrl: string | null;
   headline: string;
-  scheduledAt: Date;
-  durationMinutes: number;
-  status: SessionStatus;
-  paymentStatus: SessionPaymentStatus;
+  requestedAt: Date;
+  openedAt: Date | null;
+  requestState: ConversationState;
   topic: string | null;
-  createdAt: Date;
-  acceptedAt: Date | null;
 };
 
 export type SessionDetail = {
   id: string;
-  scheduledAt: Date;
-  durationMinutes: number;
-  status: SessionStatus;
-  paymentStatus: SessionPaymentStatus;
-  createdAt: Date;
-  acceptedAt: Date | null;
+  requestedAt: Date;
+  openedAt: Date | null;
+  requestState: ConversationState;
   topic: string | null;
   notes: string | null;
   talker: {
@@ -70,15 +65,47 @@ type SessionDetailRecord = Prisma.SessionBookingGetPayload<{
   };
 }>;
 
+export function getConversationState(input: {
+  paymentStatus: SessionPaymentStatus;
+  status: SessionStatus;
+}): ConversationState {
+  if (input.paymentStatus === "FAILED") {
+    return "DECLINED";
+  }
+
+  if (input.paymentStatus === "REFUNDED" || input.status !== "CONFIRMED") {
+    return "CLOSED";
+  }
+
+  if (input.paymentStatus === "PAID") {
+    return "OPEN";
+  }
+
+  return "PENDING";
+}
+
+export function getConversationStateLabel(state: ConversationState) {
+  if (state === "OPEN") {
+    return "Open";
+  }
+
+  if (state === "DECLINED") {
+    return "Declined";
+  }
+
+  if (state === "CLOSED") {
+    return "Closed";
+  }
+
+  return "Pending";
+}
+
 function mapSessionDetail(session: SessionDetailRecord): SessionDetail {
   return {
     id: session.id,
-    scheduledAt: session.scheduledAt,
-    durationMinutes: session.durationMinutes,
-    status: session.status,
-    paymentStatus: session.paymentStatus,
-    createdAt: session.createdAt,
-    acceptedAt: session.paidAt,
+    requestedAt: session.createdAt,
+    openedAt: session.paidAt,
+    requestState: getConversationState(session),
     topic: session.topic,
     notes: session.notes,
     talker: {
@@ -97,30 +124,12 @@ function mapSessionDetail(session: SessionDetailRecord): SessionDetail {
   };
 }
 
-export function getSessionConnectionLabel(paymentStatus: SessionPaymentStatus) {
-  if (paymentStatus === "PAID") {
-    return "Open";
-  }
-
-  if (paymentStatus === "FAILED") {
-    return "Declined";
-  }
-
-  if (paymentStatus === "REFUNDED") {
-    return "Closed";
-  }
-
-  return "Pending";
+export function isConversationPending(input: Pick<SessionDetail | SessionCard, "requestState">) {
+  return input.requestState === "PENDING";
 }
 
-export function isSessionRequestPending(input: Pick<SessionDetail | SessionCard, "paymentStatus">) {
-  return input.paymentStatus === "UNPAID" || input.paymentStatus === "PENDING";
-}
-
-export function isSessionLive(
-  session: Pick<SessionDetail | SessionCard, "scheduledAt" | "durationMinutes" | "status" | "paymentStatus">
-) {
-  return session.paymentStatus === "PAID" && session.status === "CONFIRMED";
+export function isConversationOpen(input: Pick<SessionDetail | SessionCard, "requestState">) {
+  return input.requestState === "OPEN";
 }
 
 export async function createConversationRequest(input: {
@@ -129,6 +138,17 @@ export async function createConversationRequest(input: {
   topic?: string;
   notes?: string;
 }) {
+  const topic = input.topic?.trim() || null;
+  const notes = input.notes?.trim() || null;
+
+  if (topic && topic.length > 120) {
+    throw new Error("Keep the topic under 120 characters.");
+  }
+
+  if (notes && notes.length > 2000) {
+    throw new Error("Keep the context under 2000 characters.");
+  }
+
   const listener = await prisma.listenerProfile.findFirst({
     where: {
       slug: input.listenerSlug,
@@ -148,7 +168,6 @@ export async function createConversationRequest(input: {
       user: {
         select: {
           id: true,
-          listenerSettings: true,
         },
       },
     },
@@ -196,17 +215,15 @@ export async function createConversationRequest(input: {
     );
   }
 
-  const settings = listener.user.listenerSettings ?? getDefaultListenerSettings();
-
   return prisma.sessionBooking.create({
     data: {
       talkerId: input.talkerId,
       listenerId: listener.user.id,
       scheduledAt: new Date(),
-      durationMinutes: settings.defaultSessionMinutes,
-      topic: input.topic?.trim() || null,
-      notes: input.notes?.trim() || null,
-      ratePerMinuteCents: listener.ratePerMinuteCents ?? 0,
+      durationMinutes: 0,
+      topic,
+      notes,
+      ratePerMinuteCents: 0,
       totalAmountCents: 0,
       status: "CONFIRMED",
       paymentStatus: "PENDING",
@@ -234,7 +251,7 @@ export async function acceptConversationRequest(listenerId: string, sessionId: s
     return session;
   }
 
-  const acceptedAt = new Date();
+  const openedAt = new Date();
 
   return prisma.sessionBooking.update({
     where: {
@@ -242,8 +259,8 @@ export async function acceptConversationRequest(listenerId: string, sessionId: s
     },
     data: {
       paymentStatus: "PAID",
-      paidAt: acceptedAt,
-      scheduledAt: acceptedAt,
+      paidAt: openedAt,
+      scheduledAt: openedAt,
     },
     select: {
       id: true,
@@ -280,13 +297,10 @@ export async function getTalkerSessions(talkerId: string): Promise<SessionCard[]
     counterpartyName: session.listener.name ?? "Listener",
     counterpartyAvatarUrl: session.listener.avatarUrl,
     headline: session.listener.listenerProfile?.headline ?? "Listener session",
-    scheduledAt: session.scheduledAt,
-    durationMinutes: session.durationMinutes,
-    status: session.status,
-    paymentStatus: session.paymentStatus,
+    requestedAt: session.createdAt,
+    openedAt: session.paidAt,
+    requestState: getConversationState(session),
     topic: session.topic,
-    createdAt: session.createdAt,
-    acceptedAt: session.paidAt,
   }));
 }
 
@@ -322,13 +336,10 @@ export async function getListenerSessions(listenerId: string): Promise<SessionCa
     counterpartyName: session.talker.name ?? "Konfide member",
     counterpartyAvatarUrl: session.talker.avatarUrl,
     headline: session.listener.listenerProfile?.headline ?? "Listener session",
-    scheduledAt: session.scheduledAt,
-    durationMinutes: session.durationMinutes,
-    status: session.status,
-    paymentStatus: session.paymentStatus,
+    requestedAt: session.createdAt,
+    openedAt: session.paidAt,
+    requestState: getConversationState(session),
     topic: session.topic,
-    createdAt: session.createdAt,
-    acceptedAt: session.paidAt,
   }));
 }
 
@@ -416,6 +427,10 @@ export async function getListenerDashboardData(listenerId: string) {
       where: {
         userId: listenerId,
       },
+      select: {
+        acceptingNewBookings: true,
+        lastActiveAt: true,
+      },
     }),
     prisma.sessionBooking.findMany({
       where: {
@@ -434,9 +449,16 @@ export async function getListenerDashboardData(listenerId: string) {
     }),
   ]);
 
-  const pendingRequests = sessions.filter((session) => isSessionRequestPending(session));
-  const activeSessions = sessions.filter((session) => isSessionLive(session));
-  const recentSessions = sessions.filter((session) => session.paymentStatus === "PAID").slice(0, 3);
+  const conversations = sessions.map((session) => ({
+    id: session.id,
+    talkerName: session.talker.name ?? "Konfide member",
+    topic: session.topic,
+    requestedAt: session.createdAt,
+    openedAt: session.paidAt,
+    requestState: getConversationState(session),
+  }));
+  const pendingRequests = conversations.filter((conversation) => isConversationPending(conversation));
+  const openConversations = conversations.filter((conversation) => isConversationOpen(conversation));
 
   return {
     name: profileData?.name ?? "Listener",
@@ -444,10 +466,9 @@ export async function getListenerDashboardData(listenerId: string) {
     profile: profileData?.listenerProfile ?? null,
     settings,
     pendingRequestsCount: pendingRequests.length,
-    activeSessionsCount: activeSessions.length,
-    totalConnectionsCount: sessions.filter((session) => session.paymentStatus === "PAID").length,
+    openConversationsCount: openConversations.length,
+    totalConnectionsCount: openConversations.length,
     pendingRequests: pendingRequests.slice(0, 4),
-    activeSessions: activeSessions.slice(0, 3),
-    recentSessions,
+    openConversations: openConversations.slice(0, 3),
   };
 }
