@@ -113,27 +113,12 @@ export default function HeroShowcase() {
                   </div>
                 </div>
                 <div className="relative z-10 flex items-center gap-2 md:gap-3">
-                  <button
-                    type="button"
-                    aria-label="Start audio call"
-                    className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-surface-container text-xs text-on-surface-variant transition-colors hover:bg-surface-container-high sm:h-8 sm:w-8 md:h-9 md:w-9 md:text-base"
-                  >
-                    📞
-                  </button>
-                  <button
-                    type="button"
-                    aria-label="Start video call"
-                    className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-surface-container text-xs text-on-surface-variant transition-colors hover:bg-surface-container-high sm:h-8 sm:w-8 md:h-9 md:w-9 md:text-base"
-                  >
-                    📹
-                  </button>
-                  <button
-                    type="button"
-                    aria-label="Open more options"
-                    className="hidden h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-surface-container text-xs text-on-surface-variant transition-colors hover:bg-surface-container-high sm:flex md:h-9 md:w-9 md:text-base"
-                  >
-                    ⋯
-                  </button>
+                  <span className="hidden border border-on-surface/8 bg-surface-container px-2 py-1 text-[9px] font-bold uppercase tracking-[0.18em] text-on-surface-variant sm:inline-flex">
+                    Encrypted
+                  </span>
+                  <span className="inline-flex border border-green-600/15 bg-green-50 px-2 py-1 text-[9px] font-bold uppercase tracking-[0.18em] text-green-700">
+                    Active now
+                  </span>
                 </div>
               </div>
 

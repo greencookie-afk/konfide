@@ -1,10 +1,44 @@
 # Konfide
 
-A peer-support platform where people browse live listener profiles, send a request, and start chatting once a listener accepts.
+A peer-support platform for live listener discovery, lightweight conversation requests, and permanent encrypted chat history once a listener accepts.
+
+## Live App
+
+- Production: `https://konfide-flame.vercel.app`
+- Status: stable live request-and-chat build
+
+## Overview
+
+Konfide is built around one simple flow:
+
+1. Talkers browse published listeners in `explore`
+2. A talker sends a conversation request with a topic and optional context
+3. The listener accepts the request
+4. Both sides continue in the same permanent chat thread
+
+The current product contract is intentionally narrow:
+
+- no payment flow
+- no appointment booking
+- no calendar-slot scheduling
+- no expiring chat timer
+
+## Product Features
+
+- Role-based auth for talkers and listeners
+- Google OAuth and email/password sign-in
+- Public listener profiles with publishing controls
+- Explore catalog with search, topic filters, and `Active now` state
+- Single listener availability toggle for accepting new requests
+- Pending request limits to reduce listener overload
+- Permanent shared chat history after acceptance
+- Browser notification preference support
+- Encrypted chat storage at rest
+- Security headers, signed cookies, origin checks, and rate limits
 
 ## Specification
 
-The authoritative product requirements live in [docs/SRS.md](docs/SRS.md). The current app contract is a live request-and-chat system, not a paid appointment-booking product.
+The authoritative requirements live in [docs/SRS.md](docs/SRS.md).
 
 ## Tech Stack
 
@@ -15,7 +49,7 @@ The authoritative product requirements live in [docs/SRS.md](docs/SRS.md). The c
 | Database | PostgreSQL + Prisma |
 | Auth | Custom cookie auth + Google OAuth |
 
-## Routes
+## Main Routes
 
 ### Public
 | Route | Page |
@@ -41,7 +75,7 @@ The authoritative product requirements live in [docs/SRS.md](docs/SRS.md). The c
 | `/listener/availability` | Toggle live availability |
 | `/listener/sessions` | Manage incoming requests |
 
-## Development
+## Getting Started
 
 ```bash
 npm install
@@ -53,7 +87,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Environment
 
-Copy `.env.example` to `.env` and fill in the values:
+Copy `.env.example` to `.env`:
 
 ```bash
 cp .env.example .env
@@ -61,16 +95,34 @@ cp .env.example .env
 
 Required variables:
 
-- `DATABASE_URL`
-- `AUTH_SECRET`
-- `CHAT_ENCRYPTION_KEY`
-- `GOOGLE_CLIENT_ID`
-- `GOOGLE_CLIENT_SECRET`
+| Variable | Purpose |
+|-------|-----------|
+| `DATABASE_URL` | PostgreSQL connection string |
+| `AUTH_SECRET` | Session signing secret |
+| `CHAT_ENCRYPTION_KEY` | Chat encryption key for message storage |
+| `GOOGLE_CLIENT_ID` | Google OAuth client id |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret |
 
 Optional:
 
-- `APP_URL` for a canonical deployed URL
-- `NEXTAUTH_URL` if you want to keep a canonical app URL in env for tooling or future integrations
+| Variable | Purpose |
+|-------|-----------|
+| `APP_URL` | Canonical deployed app URL |
+| `NEXTAUTH_URL` | Optional compatibility URL for tooling or future integrations |
+
+## Google OAuth Setup
+
+Add these in Google Cloud Console.
+
+Authorized JavaScript origins:
+
+- `http://localhost:3000`
+- `https://konfide-flame.vercel.app`
+
+Authorized redirect URIs:
+
+- `http://localhost:3000/api/auth/google/callback`
+- `https://konfide-flame.vercel.app/api/auth/google/callback`
 
 ## Deploy To Vercel
 
@@ -94,6 +146,7 @@ Set these in `Project Settings -> Environment Variables`:
 
 - `DATABASE_URL` or `POSTGRES_URL`
 - `AUTH_SECRET`
+- `CHAT_ENCRYPTION_KEY`
 - `GOOGLE_CLIENT_ID`
 - `GOOGLE_CLIENT_SECRET`
 - `APP_URL`
@@ -130,9 +183,23 @@ Once the env vars are added, deploy normally from Vercel.
 
 The build already runs `prisma generate` automatically, so the Prisma client stays fresh during deployment.
 
-### Notes
+## Security Notes
 
-- Google OAuth works best against a stable production URL. Preview deployments may need their own callback URLs if you want Google sign-in there too.
+- Chat messages are encrypted at rest
+- Mutating routes reject untrusted origins
+- Auth and chat writes are rate-limited
+- Session cookies are signed and `httpOnly`
+- Production responses include CSP, HSTS, `X-Frame-Options`, and `nosniff`
+
+## Local Commands
+
+```bash
+npm run dev
+npm run lint
+npm run build
+npm run prisma:push
+npm run prisma:reset
+```
 
 ## Database Reset
 
