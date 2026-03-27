@@ -1,6 +1,6 @@
 import "server-only";
 import type { Prisma, SessionPaymentStatus, SessionStatus } from "@/generated/prisma";
-import { getDefaultListenerSettings } from "@/server/availability/service";
+import { getDefaultListenerSettings, getVisibleListenerSettingsWhere } from "@/server/availability/service";
 import { prisma } from "@/server/db/client";
 
 export type SessionCard = {
@@ -166,7 +166,7 @@ export async function createConversationRequest(input: {
           role: "LISTENER",
           listenerSettings: {
             is: {
-              acceptingNewBookings: true,
+              ...getVisibleListenerSettingsWhere(),
             },
           },
         },

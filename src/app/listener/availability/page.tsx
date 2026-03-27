@@ -1,10 +1,18 @@
+import { getAccountEditorData } from "@/server/account/service";
 import AvailabilityEditor from "@/features/listener/components/AvailabilityEditor";
 import { requireUser } from "@/server/auth/server";
 import { getListenerAvailabilityEditor } from "@/server/availability/service";
 
 export default async function AvailabilitySettingsPage() {
   const user = await requireUser(["LISTENER"]);
-  const availability = await getListenerAvailabilityEditor(user.id);
+  const [availability, account] = await Promise.all([
+    getListenerAvailabilityEditor(user.id),
+    getAccountEditorData(user.id),
+  ]);
+
+  if (!account) {
+    return null;
+  }
 
   return (
     <div className="space-y-8">
@@ -17,7 +25,13 @@ export default async function AvailabilitySettingsPage() {
         </p>
       </section>
 
-      <AvailabilityEditor initialData={availability} />
+      <AvailabilityEditor
+        initialData={availability}
+        notificationSettings={{
+          browserNotificationsEnabled: account.browserNotificationsEnabled,
+          browserNotificationPermission: account.browserNotificationPermission,
+        }}
+      />
     </div>
   );
 }

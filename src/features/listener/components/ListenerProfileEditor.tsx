@@ -137,7 +137,7 @@ export default function ListenerProfileEditor({ initialData }: ListenerProfileEd
       <aside className="space-y-4">
         <section className="border border-on-surface/8 bg-surface-container-lowest p-4">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-on-surface-variant">Live preview</p>
-          <h3 className="mt-2 text-xl font-bold text-on-surface">{headline.trim() || initialData.name || "Your listener listing"}</h3>
+          <h3 className="mt-2 text-lg font-bold text-on-surface">{headline.trim() || initialData.name || "Your listener listing"}</h3>
           <p className="mt-2 text-sm leading-6 text-on-surface-variant">
             {about.trim() || "Your about section preview appears here as you shape the public listing."}
           </p>
@@ -183,7 +183,9 @@ export default function ListenerProfileEditor({ initialData }: ListenerProfileEd
         <section className="border border-on-surface/8 bg-surface-container-lowest p-4">
           <div className="mb-4 flex items-center justify-between gap-3 border-b border-on-surface/8 pb-4">
             <p className="text-sm text-on-surface-variant">
-              {initialData.isAvailableNow ? "You are visible right now." : "Turn availability on when you want to appear in browse."}
+              {initialData.isAvailableNow
+                ? "Availability is currently on for this listener account."
+                : "Turn availability on when you want to appear in browse."}
             </p>
             <Link href="/listener/availability" className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
               Availability

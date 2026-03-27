@@ -1,0 +1,56 @@
+import { revalidatePath } from "next/cache";
+import { NextResponse } from "next/server";
+import { getSessionUserFromRequest } from "@/server/auth/service";
+import { updateAccountEditorData } from "@/server/account/service";
+
+function jsonError(message: string, status: number) {
+  return NextResponse.json(
+    { error: message },
+    {
+      status,
+      headers: {
+        "Cache-Control": "no-store",
+      },
+    }
+  );
+}
+
+export async function PUT(request: Request) {
+  const user = await getSessionUserFromRequest(request);
+
+  if (!user) {
+    return jsonError("Sign in before editing your profile.", 401);
+  }
+
+  let payload: {
+    name?: string;
+    browserNotificationsEnabled?: boolean;
+    browserNotificationPermission?: string | null;
+  };
+
+  try {
+    payload = (await request.json()) as typeof payload;
+  } catch {
+    return jsonError("Invalid profile request.", 400);
+  }
+
+  try {
+    await updateAccountEditorData(user.id, payload);
+
+    revalidatePath("/account");
+    revalidatePath("/listener/dashboard");
+    revalidatePath("/listener/profile");
+    revalidatePath("/listener/availability");
+
+    return NextResponse.json(
+      { success: true },
+      {
+        headers: {
+          "Cache-Control": "no-store",
+        },
+      }
+    );
+  } catch (error) {
+    return jsonError(error instanceof Error ? error.message : "We could not save your profile.", 400);
+  }
+}

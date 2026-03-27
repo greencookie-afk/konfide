@@ -1,6 +1,8 @@
 import Link from "next/link";
-import { BadgeCheck, CalendarDays, Clock3, NotebookPen, Settings2, Sparkles } from "lucide-react";
-import { getDefaultListenerSettings } from "@/server/availability/service";
+import { ChevronRight, MessageSquareText, NotebookPen, Radio, Settings2 } from "lucide-react";
+import BrowserNotificationCard from "@/components/shared/BrowserNotificationCard";
+import { getAccountEditorData } from "@/server/account/service";
+import { getDefaultListenerSettings, isListenerVisibleNow, LISTENER_AWAY_TIMEOUT_MINUTES } from "@/server/availability/service";
 import { requireUser } from "@/server/auth/server";
 import { getListenerDashboardData } from "@/server/sessions/service";
 
@@ -15,161 +17,164 @@ function formatDateTime(value: Date) {
 
 export default async function ListenerDashboardPage() {
   const user = await requireUser(["LISTENER"]);
-  const dashboard = await getListenerDashboardData(user.id);
+  const [dashboard, account] = await Promise.all([getListenerDashboardData(user.id), getAccountEditorData(user.id)]);
   const settings = dashboard.settings ?? getDefaultListenerSettings();
   const isPublished = Boolean(dashboard.profile?.isPublished);
   const hasProfile = Boolean(dashboard.profile);
+  const isVisibleInBrowse = isListenerVisibleNow({
+    acceptingNewBookings: settings.acceptingNewBookings,
+    lastActiveAt: settings.lastActiveAt,
+    isPublished,
+  });
+
+  if (!account) {
+    return null;
+  }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <section>
         <p className="mb-2 text-xs font-bold uppercase tracking-[0.24em] text-primary">Listener dashboard</p>
-        <h1 className="text-3xl font-bold tracking-tight md:text-4xl">Welcome back, {dashboard.name}.</h1>
-        <p className="mt-3 max-w-2xl text-sm leading-6 text-on-surface-variant md:text-base">
-          Your workspace is now centered on live availability, incoming requests, and active conversations.
+        <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{dashboard.name}, your listener workspace</h1>
+        <p className="mt-3 max-w-2xl text-sm leading-6 text-on-surface-variant">
+          Keep the dashboard small: live status, incoming requests, notification state, and the next actions that
+          matter.
         </p>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <article className="rounded-[18px] border border-on-surface/5 bg-surface-container-lowest p-5 shadow-sm">
-          <p className="text-sm text-on-surface-variant">Visibility</p>
-          <p className="mt-2 text-3xl font-bold text-on-surface">
-            {settings.acceptingNewBookings ? "Available now" : "Hidden"}
-          </p>
+      <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <article className="border border-on-surface/8 bg-surface-container-lowest p-4">
+          <p className="text-[11px] uppercase tracking-[0.18em] text-on-surface-variant">Browse visibility</p>
+          <p className="mt-2 text-2xl font-bold text-on-surface">{isVisibleInBrowse ? "Live" : "Hidden"}</p>
           <p className="mt-2 text-sm text-on-surface-variant">
-            {isPublished ? "Your published profile can follow this switch." : "Publish your profile before going live."}
+            {isVisibleInBrowse
+              ? "Users can find you right now."
+              : isPublished
+                ? "You are published, but availability or activity is missing."
+                : "Publish your listener profile first."}
           </p>
         </article>
-        <article className="rounded-[18px] border border-on-surface/5 bg-surface-container-lowest p-5 shadow-sm">
-          <p className="text-sm text-on-surface-variant">Incoming requests</p>
-          <p className="mt-2 text-3xl font-bold text-on-surface">{dashboard.pendingRequestsCount}</p>
-          <p className="mt-2 text-sm text-on-surface-variant">Accept a request to open chat immediately.</p>
+        <article className="border border-on-surface/8 bg-surface-container-lowest p-4">
+          <p className="text-[11px] uppercase tracking-[0.18em] text-on-surface-variant">Incoming requests</p>
+          <p className="mt-2 text-2xl font-bold text-on-surface">{dashboard.pendingRequestsCount}</p>
+          <p className="mt-2 text-sm text-on-surface-variant">Accept one request to unlock a live chat.</p>
         </article>
-        <article className="rounded-[18px] border border-on-surface/5 bg-surface-container-lowest p-5 shadow-sm">
-          <p className="text-sm text-on-surface-variant">Total connections</p>
-          <p className="mt-2 text-3xl font-bold text-on-surface">{dashboard.totalConnectionsCount}</p>
+        <article className="border border-on-surface/8 bg-surface-container-lowest p-4">
+          <p className="text-[11px] uppercase tracking-[0.18em] text-on-surface-variant">Active chats</p>
+          <p className="mt-2 text-2xl font-bold text-on-surface">{dashboard.activeSessionsCount}</p>
           <p className="mt-2 text-sm text-on-surface-variant">
-            {dashboard.activeSessionsCount} active conversation{dashboard.activeSessionsCount === 1 ? "" : "s"} right now
+            {dashboard.totalConnectionsCount} accepted conversation{dashboard.totalConnectionsCount === 1 ? "" : "s"} overall
           </p>
+        </article>
+        <article className="border border-on-surface/8 bg-surface-container-lowest p-4">
+          <p className="text-[11px] uppercase tracking-[0.18em] text-on-surface-variant">Auto-away</p>
+          <p className="mt-2 text-2xl font-bold text-on-surface">{LISTENER_AWAY_TIMEOUT_MINUTES} min</p>
+          <p className="mt-2 text-sm text-on-surface-variant">Availability turns off if the listener workspace goes away.</p>
         </article>
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-        <article className="rounded-[20px] border border-primary/10 bg-primary-container p-5 shadow-sm sm:p-6">
-          <div className="flex items-start justify-between gap-4">
+      <section className="grid gap-4 lg:grid-cols-[1.08fr_0.92fr]">
+        <article className="border border-primary/15 bg-primary-container p-4">
+          <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.24em] text-on-primary-container">Workspace status</p>
-              <h2 className="mt-3 text-2xl font-bold tracking-tight text-on-primary-container">
-                {hasProfile ? "Your listener profile is ready to manage." : "Your listener profile has not been started yet."}
+              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-on-primary-container">Workspace</p>
+              <h2 className="mt-2 text-2xl font-bold text-on-primary-container">
+                {hasProfile ? "Your listener setup is ready to manage." : "Start your public listener listing."}
               </h2>
             </div>
-            <Sparkles className="h-5 w-5 text-on-primary-container" />
+            <Radio className="h-5 w-5 text-on-primary-container" />
           </div>
 
-          <div className="mt-5 grid gap-3 rounded-[16px] bg-surface px-4 py-4 text-sm">
-            <div className="flex items-center justify-between gap-3">
+          <div className="mt-4 grid gap-2 text-sm">
+            <div className="flex items-center justify-between bg-surface px-3 py-3">
               <span className="text-on-surface-variant">Public URL</span>
               <span className="font-semibold text-on-surface">
                 {dashboard.profile?.slug ? `/explore/${dashboard.profile.slug}` : "Not set"}
               </span>
             </div>
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-on-surface-variant">Visibility</span>
+            <div className="flex items-center justify-between bg-surface px-3 py-3">
+              <span className="text-on-surface-variant">Publishing</span>
               <span className="font-semibold text-on-surface">{isPublished ? "Published" : "Draft"}</span>
             </div>
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center justify-between bg-surface px-3 py-3">
               <span className="text-on-surface-variant">Availability</span>
               <span className="font-semibold text-on-surface">
-                {settings.acceptingNewBookings ? "Accepting requests" : "Hidden from browse"}
+                {settings.acceptingNewBookings ? "On" : "Off"}
               </span>
             </div>
           </div>
 
-          <div className="mt-5 flex flex-wrap gap-3">
+          <div className="mt-4 flex flex-wrap gap-2">
             <Link
               href="/listener/profile"
-              className="inline-flex items-center justify-center gap-2 rounded-[14px] bg-primary px-5 py-3 text-sm font-semibold text-on-surface transition hover:opacity-90"
+              className="inline-flex items-center justify-center gap-2 bg-primary px-4 py-3 text-sm font-semibold text-on-surface transition hover:opacity-90"
             >
               <NotebookPen className="h-4 w-4" />
-              Edit public profile
+              Edit profile
             </Link>
             <Link
               href="/listener/availability"
-              className="inline-flex items-center justify-center gap-2 rounded-[14px] border border-on-primary-container/20 px-5 py-3 text-sm font-semibold text-on-primary-container transition hover:bg-white/20"
+              className="inline-flex items-center justify-center gap-2 border border-on-primary-container/20 px-4 py-3 text-sm font-semibold text-on-primary-container transition hover:bg-white/20"
             >
               <Settings2 className="h-4 w-4" />
-              Manage availability
+              Availability
             </Link>
           </div>
         </article>
 
-        <article className="rounded-[20px] border border-on-surface/5 bg-surface-container-lowest p-5 shadow-sm sm:p-6">
-          <h2 className="text-xl font-bold text-on-surface">Live workflow</h2>
-          <div className="mt-5 space-y-4 text-sm text-on-surface-variant">
-            <div className="flex items-start gap-3 rounded-[16px] bg-surface px-4 py-4">
-              <CalendarDays className="mt-0.5 h-4 w-4 text-primary" />
-              <div>
-                <p className="font-semibold text-on-surface">Go visible</p>
-                <p className="mt-1">Turn on availability whenever you want to appear in browse.</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 rounded-[16px] bg-surface px-4 py-4">
-              <Clock3 className="mt-0.5 h-4 w-4 text-primary" />
-              <div>
-                <p className="font-semibold text-on-surface">Accept when ready</p>
-                <p className="mt-1">Incoming requests wait safely until you choose to accept them.</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 rounded-[16px] bg-surface px-4 py-4">
-              <BadgeCheck className="mt-0.5 h-4 w-4 text-primary" />
-              <div>
-                <p className="font-semibold text-on-surface">Start chatting</p>
-                <p className="mt-1">The chat opens immediately for both people after acceptance.</p>
-              </div>
-            </div>
-          </div>
-        </article>
+        <BrowserNotificationCard
+          title="Mobile alerts"
+          description="Turn on browser notifications on this device so incoming requests and accepted chats can surface faster on supported mobile browsers."
+          initialEnabled={account.browserNotificationsEnabled}
+          initialPermission={account.browserNotificationPermission}
+        />
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-2">
-        <article className="rounded-[20px] border border-on-surface/5 bg-surface-container-lowest p-5 shadow-sm sm:p-6">
-          <div className="flex items-center gap-3">
-            <CalendarDays className="h-5 w-5 text-primary" />
-            <h2 className="text-xl font-bold">Pending requests</h2>
+      <section className="grid gap-4 lg:grid-cols-2">
+        <article className="border border-on-surface/8 bg-surface-container-lowest p-4">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-lg font-bold">Pending requests</h2>
+            <Link href="/listener/sessions" className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-primary">
+              Open chats
+              <ChevronRight className="h-3.5 w-3.5" />
+            </Link>
           </div>
-          <div className="mt-5 space-y-3">
+          <div className="mt-4 space-y-2">
             {dashboard.pendingRequests.length ? (
               dashboard.pendingRequests.map((session) => (
-                <div key={session.id} className="rounded-[16px] bg-surface px-4 py-4">
+                <div key={session.id} className="border border-on-surface/8 bg-surface px-3 py-3">
                   <p className="font-semibold text-on-surface">{session.talker.name ?? "Konfide member"}</p>
                   <p className="mt-1 text-sm text-on-surface-variant">{session.topic || "Support conversation"}</p>
                   <p className="mt-2 text-sm text-on-surface-variant">Sent {formatDateTime(session.createdAt)}</p>
                 </div>
               ))
             ) : (
-              <div className="rounded-[16px] border border-dashed border-on-surface/10 bg-surface px-4 py-5 text-sm text-on-surface-variant">
+              <div className="border border-dashed border-on-surface/10 bg-surface px-4 py-5 text-sm text-on-surface-variant">
                 No pending requests yet.
               </div>
             )}
           </div>
         </article>
 
-        <article className="rounded-[20px] border border-on-surface/5 bg-surface-container-lowest p-5 shadow-sm sm:p-6">
-          <div className="flex items-center gap-3">
-            <Clock3 className="h-5 w-5 text-primary" />
-            <h2 className="text-xl font-bold">Recent conversations</h2>
+        <article className="border border-on-surface/8 bg-surface-container-lowest p-4">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-lg font-bold">Recent conversations</h2>
+            <Link href="/listener/sessions" className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-primary">
+              <MessageSquareText className="h-3.5 w-3.5" />
+              View all
+            </Link>
           </div>
-          <div className="mt-5 space-y-3">
+          <div className="mt-4 space-y-2">
             {dashboard.recentSessions.length ? (
               dashboard.recentSessions.map((session) => (
-                <div key={session.id} className="rounded-[16px] bg-surface px-4 py-4">
+                <div key={session.id} className="border border-on-surface/8 bg-surface px-3 py-3">
                   <p className="font-semibold text-on-surface">{session.talker.name ?? "Konfide member"}</p>
                   <p className="mt-1 text-sm text-on-surface-variant">{session.topic || "Support conversation"}</p>
                   <p className="mt-2 text-sm text-on-surface-variant">Started {formatDateTime(session.scheduledAt)}</p>
                 </div>
               ))
             ) : (
-              <div className="rounded-[16px] border border-dashed border-on-surface/10 bg-surface px-4 py-5 text-sm text-on-surface-variant">
+              <div className="border border-dashed border-on-surface/10 bg-surface px-4 py-5 text-sm text-on-surface-variant">
                 Conversations you have already accepted will appear here.
               </div>
             )}

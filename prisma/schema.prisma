@@ -40,6 +40,8 @@ model User {
   passwordHash              String?
   googleSubject             String?                    @unique
   avatarUrl                 String?
+  browserNotificationsEnabled Boolean                  @default(false)
+  browserNotificationPermission String?
   role                      UserRole
   listenerProfile           ListenerProfile?
   listenerSettings          ListenerSettings?
@@ -88,10 +90,13 @@ model ListenerSettings {
   defaultSessionMinutes Int     @default(45)
   bufferMinutes        Int      @default(15)
   acceptingNewBookings Boolean  @default(true)
+  lastActiveAt         DateTime?
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([acceptingNewBookings, lastActiveAt])
 }
 
 model ListenerAvailabilitySlot {

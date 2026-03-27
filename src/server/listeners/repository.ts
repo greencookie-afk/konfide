@@ -1,5 +1,6 @@
 import "server-only";
 import { Prisma } from "@/generated/prisma";
+import { getVisibleListenerSettingsWhere } from "@/server/availability/service";
 import { prisma } from "@/server/db/client";
 import type { BrowseListenersFilters } from "@/server/listeners/types";
 
@@ -14,7 +15,7 @@ function buildBrowseWhere(filters: Pick<BrowseListenersFilters, "query" | "topic
           role: "LISTENER",
           listenerSettings: {
             is: {
-              acceptingNewBookings: true,
+              ...getVisibleListenerSettingsWhere(),
             },
           },
         },
@@ -94,7 +95,7 @@ export async function listListenerTopics() {
           role: "LISTENER",
           listenerSettings: {
             is: {
-              acceptingNewBookings: true,
+              ...getVisibleListenerSettingsWhere(),
             },
           },
         },
@@ -120,7 +121,7 @@ export async function findPublishedListenerBySlug(slug: string) {
           role: "LISTENER",
           listenerSettings: {
             is: {
-              acceptingNewBookings: true,
+              ...getVisibleListenerSettingsWhere(),
             },
           },
         },
