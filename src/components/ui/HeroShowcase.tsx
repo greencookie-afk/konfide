@@ -15,87 +15,178 @@ export default function HeroShowcase() {
               <svg className="hidden h-3 w-3 text-green-600 min-[420px]:block" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2V7a3 3 0 00-6 0v2h6z" clipRule="evenodd" />
               </svg>
-              <span className="truncate">konfide.app/explore</span>
+              <span className="truncate">konfide.app/session/live</span>
             </div>
           </div>
         </div>
 
         <div className="overflow-hidden rounded-b-lg border border-t-0 border-on-surface/5 bg-surface shadow-[0_40px_80px_-20px_rgba(0,0,0,0.15)] md:rounded-b-xl">
-          <div className="grid gap-0 md:grid-cols-[1.1fr_0.9fr]">
-            <div className="border-b border-on-surface/5 bg-surface-container-low p-4 sm:p-5 md:border-b-0 md:border-r md:p-6">
-              <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary">Published listener</p>
-              <div className="mt-4 flex items-start gap-4">
-                <div className="relative h-16 w-16 overflow-hidden rounded-[18px] bg-surface-container-high">
-                  <Image
-                    src="/images/portrait_three_1774343056010.png"
-                    alt="Listener portrait"
-                    fill
-                    sizes="64px"
-                    className="object-cover"
-                  />
-                </div>
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="text-lg font-bold text-on-surface">Sarah Jenkins</h3>
-                    <span className="rounded-full bg-primary-container px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-on-primary-container">
-                      Verified
-                    </span>
-                  </div>
-                  <p className="mt-1 text-sm font-medium text-on-surface">Gentle support for work stress and burnout</p>
-                  <p className="mt-3 text-sm leading-6 text-on-surface-variant">
-                    Published profiles show real specialties, language, pricing, and availability before a booking is
-                    made.
-                  </p>
-                </div>
+          <div className="flex h-[330px] min-[420px]:h-[360px] sm:h-[400px] md:h-[520px]">
+            <div className="hidden w-64 flex-col border-r border-on-surface/5 bg-surface-container-low md:flex lg:w-72">
+              <div className="border-b border-on-surface/5 p-4 lg:p-5">
+                <h3 className="text-base font-bold lg:text-lg">Messages</h3>
               </div>
-              <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                <div className="rounded-[18px] bg-surface px-4 py-4 text-left">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-on-surface-variant">Rate</p>
-                  <p className="mt-2 text-lg font-bold text-on-surface">$1.00/min</p>
-                </div>
-                <div className="rounded-[18px] bg-surface px-4 py-4 text-left">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-on-surface-variant">Languages</p>
-                  <p className="mt-2 text-sm font-semibold text-on-surface">English, Hindi</p>
-                </div>
-                <div className="rounded-[18px] bg-surface px-4 py-4 text-left">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-on-surface-variant">Next opening</p>
-                  <p className="mt-2 text-sm font-semibold text-on-surface">Today, 6:30 PM</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-4 sm:p-5 md:p-6">
-              <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary">Booking flow</p>
-              <div className="mt-4 rounded-[20px] border border-primary/10 bg-primary-container p-4 sm:p-5">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-lg font-bold text-on-primary-container">Book a session</p>
-                    <p className="text-sm text-on-primary-container/75">Choose time, add notes, confirm</p>
-                  </div>
-                  <p className="text-sm font-semibold text-on-primary-container">$45 total</p>
-                </div>
-              </div>
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <div className="flex-1 overflow-hidden">
                 {[
-                  { label: "Date", value: "Tue, Oct 24" },
-                  { label: "Time", value: "6:30 PM" },
-                  { label: "Duration", value: "45 minutes" },
-                  { label: "Topic", value: "Work stress" },
-                ].map((item) => (
-                  <div key={item.label} className="rounded-[16px] border border-on-surface/5 bg-surface px-4 py-4 text-left">
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-on-surface-variant">{item.label}</p>
-                    <p className="mt-2 text-sm font-semibold text-on-surface">{item.value}</p>
+                  {
+                    name: "Sarah Jenkins",
+                    msg: "By being kind to myself...",
+                    time: "now",
+                    active: true,
+                    online: true,
+                    imgUrl: "/images/portrait_three_1774343056010.png",
+                  },
+                  {
+                    name: "Marcus Taylor",
+                    msg: "Let's continue tomorrow",
+                    time: "2h",
+                    active: false,
+                    online: true,
+                    imgUrl: "/images/portrait_two_1774343033404.png",
+                  },
+                  {
+                    name: "Elena Rodriguez",
+                    msg: "Request accepted earlier",
+                    time: "5h",
+                    active: false,
+                    online: false,
+                    imgUrl: "/images/portrait_one_1774343011664.png",
+                  },
+                  {
+                    name: "David Lee",
+                    msg: "Thank you so much",
+                    time: "1d",
+                    active: false,
+                    online: false,
+                    imgUrl: "/images/portrait_four_1774343074850.png",
+                  },
+                ].map((contact) => (
+                  <div
+                    key={contact.name}
+                    className={`flex cursor-pointer items-center gap-3 border-l-2 px-4 py-3 transition-colors lg:px-5 lg:py-4 ${
+                      contact.active
+                        ? "border-primary bg-primary-container/30"
+                        : "border-transparent hover:bg-surface-container"
+                    }`}
+                  >
+                    <div className="relative">
+                      <Image
+                        src={contact.imgUrl}
+                        alt={contact.name}
+                        width={36}
+                        height={36}
+                        className="h-9 w-9 rounded-full bg-surface-container-high object-cover"
+                      />
+                      {contact.online ? (
+                        <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-surface-container-low bg-green-500" />
+                      ) : null}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-baseline justify-between">
+                        <span className={`truncate text-sm ${contact.active ? "font-bold" : "font-medium"}`}>
+                          {contact.name}
+                        </span>
+                        <span className="ml-2 shrink-0 text-[10px] text-on-surface-variant/60">{contact.time}</span>
+                      </div>
+                      <p className="mt-0.5 truncate text-xs text-on-surface-variant">{contact.msg}</p>
+                    </div>
                   </div>
                 ))}
               </div>
-              <div className="mt-4 rounded-[18px] border border-on-surface/5 bg-surface-container-low px-4 py-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-on-surface-variant">After confirmation</p>
-                <p className="mt-2 text-sm leading-6 text-on-surface-variant">
-                  The booking appears in user sessions and in the listener workspace, so both sides are looking at the
-                  same schedule.
-                </p>
-                <div className="mt-4 inline-flex rounded-none bg-on-surface px-4 py-2 text-sm font-semibold text-surface">
-                  Confirm booking
+            </div>
+
+            <div className="relative isolate flex flex-1 flex-col">
+              <div className="relative z-20 flex shrink-0 items-center justify-between gap-3 border-b border-on-surface/5 px-3 py-2.5 sm:px-4 sm:py-3 md:px-6 md:py-4">
+                <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
+                  <Image
+                    src="/images/portrait_three_1774343056010.png"
+                    alt="Sarah Jenkins"
+                    width={40}
+                    height={40}
+                    className="h-7 w-7 shrink-0 rounded-full bg-surface-container-high object-cover sm:h-8 sm:w-8 md:h-10 md:w-10"
+                  />
+                  <div>
+                    <h4 className="truncate text-[11px] font-bold sm:text-xs md:text-sm">Sarah Jenkins</h4>
+                    <p className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-green-600 md:text-[10px]">
+                      <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" /> Online
+                    </p>
+                  </div>
+                </div>
+                <div className="relative z-10 flex items-center gap-2 md:gap-3">
+                  <button
+                    type="button"
+                    aria-label="Start audio call"
+                    className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-surface-container text-xs text-on-surface-variant transition-colors hover:bg-surface-container-high sm:h-8 sm:w-8 md:h-9 md:w-9 md:text-base"
+                  >
+                    📞
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Start video call"
+                    className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-surface-container text-xs text-on-surface-variant transition-colors hover:bg-surface-container-high sm:h-8 sm:w-8 md:h-9 md:w-9 md:text-base"
+                  >
+                    📹
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Open more options"
+                    className="hidden h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-surface-container text-xs text-on-surface-variant transition-colors hover:bg-surface-container-high sm:flex md:h-9 md:w-9 md:text-base"
+                  >
+                    ⋯
+                  </button>
+                </div>
+              </div>
+
+              <div className="relative z-0 flex flex-1 flex-col gap-2.5 overflow-hidden px-3 py-3 sm:gap-3 sm:px-4 sm:py-4 md:gap-4 md:px-6 md:py-6">
+                <div className="text-center">
+                  <span className="rounded-full bg-surface-container px-3 py-1 text-[9px] uppercase tracking-widest text-on-surface-variant/50 md:text-[10px]">
+                    Today, 2:30 PM
+                  </span>
+                </div>
+                <div className="max-w-[88%] self-start sm:max-w-[80%] md:max-w-[70%]">
+                  <div className="rounded-2xl rounded-tl-sm bg-surface-container-high px-3 py-2 md:px-4 md:py-3">
+                    <p className="text-[11px] leading-relaxed sm:text-xs md:text-sm">
+                      I completely understand how overwhelming that return to work can feel. I was in your exact shoes
+                      two years ago.
+                    </p>
+                  </div>
+                  <span className="ml-1 mt-1 block text-[9px] text-on-surface-variant/50 md:text-[10px]">2:30 PM</span>
+                </div>
+                <div className="max-w-[88%] self-end sm:max-w-[80%] md:max-w-[70%]">
+                  <div className="rounded-2xl rounded-tr-sm bg-primary px-3 py-2 text-on-surface md:px-4 md:py-3">
+                    <p className="text-[11px] leading-relaxed sm:text-xs md:text-sm">
+                      It&apos;s the guilt that&apos;s the hardest part. How did you manage it in the first few weeks?
+                    </p>
+                  </div>
+                  <span className="mr-1 mt-1 block text-right text-[9px] text-on-surface-variant/50 md:text-[10px]">
+                    2:31 PM
+                  </span>
+                </div>
+                <div className="max-w-[88%] self-start sm:max-w-[80%] md:max-w-[70%]">
+                  <div className="rounded-2xl rounded-tl-sm bg-surface-container-high px-3 py-2 md:px-4 md:py-3">
+                    <p className="text-[11px] leading-relaxed sm:text-xs md:text-sm">
+                      By being kind to myself. We can talk through some of the boundaries I set with my manager if that
+                      helps?
+                    </p>
+                  </div>
+                  <span className="ml-1 mt-1 block text-[9px] text-on-surface-variant/50 md:text-[10px]">2:32 PM</span>
+                </div>
+              </div>
+
+              <div className="relative z-10 border-t border-on-surface/5 px-3 py-2.5 sm:px-4 sm:py-3 md:px-6 md:py-4">
+                <div className="flex items-center gap-2 rounded-lg border border-on-surface/5 bg-surface-container px-3 py-2 md:gap-3 md:px-4 md:py-3">
+                  <button type="button" className="shrink-0 text-sm text-on-surface-variant/50">
+                    📎
+                  </button>
+                  <span className="flex-1 truncate text-[11px] text-on-surface-variant/40 sm:text-xs md:text-sm">
+                    Type a message...
+                  </span>
+                  <button
+                    type="button"
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-xs text-on-surface md:h-8 md:w-8 md:text-sm"
+                  >
+                    ➤
+                  </button>
                 </div>
               </div>
             </div>

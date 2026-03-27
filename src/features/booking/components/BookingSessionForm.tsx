@@ -2,77 +2,38 @@
 
 import Image from "next/image";
 import { useState, useTransition } from "react";
-import { CalendarDays, Clock3, LoaderCircle, NotebookText } from "lucide-react";
-import type { BookableCalendar } from "@/server/availability/types";
+import { LoaderCircle, MessageSquareMore, Sparkles } from "lucide-react";
 
 type BookingSessionFormProps = {
-  canBook: boolean;
+  canRequest: boolean;
   listener: {
     slug: string;
     name: string;
     avatarUrl: string | null;
     headline: string;
-    ratePerMinuteCents: number;
-    defaultSessionMinutes: number;
     specialties: string[];
+    languages: string[];
+    isAvailableNow: boolean;
   };
-  calendars: Array<{
-    durationMinutes: number;
-    calendar: BookableCalendar;
-  }>;
 };
 
-function formatCurrency(cents: number) {
-  return `$${(cents / 100).toFixed(2)}`;
-}
-
-function formatDateTime(value: string | null) {
-  if (!value) {
-    return "Choose a time";
-  }
-
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(new Date(value));
-}
-
-export default function BookingSessionForm({ canBook, listener, calendars }: BookingSessionFormProps) {
-  const [selectedDuration, setSelectedDuration] = useState(
-    calendars.find((entry) => entry.durationMinutes === listener.defaultSessionMinutes)?.durationMinutes ??
-      calendars[0]?.durationMinutes ??
-      45
-  );
-  const [selectedDate, setSelectedDate] = useState("");
-  const [selectedTime, setSelectedTime] = useState("");
+export default function BookingSessionForm({ canRequest, listener }: BookingSessionFormProps) {
   const [topic, setTopic] = useState("");
   const [notes, setNotes] = useState("");
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
 
-  const activeEntry = calendars.find((entry) => entry.durationMinutes === selectedDuration) ?? calendars[0];
-  const activeCalendar = activeEntry?.calendar;
-  const firstDateWithTimes = activeCalendar?.dates.find((date) => date.times.length);
-  const preferredDate = activeCalendar?.dates.find((date) => date.isoDate === selectedDate);
-  const activeDate = preferredDate?.times.length ? preferredDate : firstDateWithTimes ?? activeCalendar?.dates[0];
-  const activeTime = activeDate?.times.find((time) => time.iso === selectedTime)?.iso ?? activeDate?.times[0]?.iso ?? "";
-  const hasAnyBookableTimes = Boolean(activeCalendar?.dates.some((date) => date.times.length));
-
-  const totalAmountCents = selectedDuration * listener.ratePerMinuteCents;
-
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError("");
 
-    if (!activeTime) {
-      setError("Choose a date and time before confirming the booking.");
+    if (!canRequest) {
+      setError("Sign in with a talker account before sending a request.");
       return;
     }
 
-    if (!canBook) {
-      setError("Only user accounts can confirm a booking.");
+    if (!listener.isAvailableNow) {
+      setError("This listener is not accepting live requests right now.");
       return;
     }
 
@@ -85,22 +46,25 @@ export default function BookingSessionForm({ canBook, listener, calendars }: Boo
           },
           body: JSON.stringify({
             listenerSlug: listener.slug,
-            scheduledAtIso: activeTime,
-            durationMinutes: selectedDuration,
             topic,
             notes,
           }),
         });
-        const payload = (await response.json()) as { error?: string };
+        const payload = (await response.json()) as { error?: string; bookingId?: string };
 
         if (!response.ok) {
-          setError(payload.error || "We could not create the booking.");
+          setError(payload.error || "We could not send your request.");
           return;
         }
 
-        window.location.assign("/sessions");
+        if (!payload.bookingId) {
+          setError("Your request was sent, but we could not open the conversation page.");
+          return;
+        }
+
+        window.location.assign(`/sessions/${payload.bookingId}`);
       } catch {
-        setError("We could not create the booking right now.");
+        setError("We could not send your request right now.");
       }
     });
   };
@@ -109,119 +73,37 @@ export default function BookingSessionForm({ canBook, listener, calendars }: Boo
     <form onSubmit={handleSubmit} className="grid gap-6 lg:grid-cols-[1.08fr_0.92fr]">
       <section className="rounded-[20px] border border-on-surface/5 bg-surface-container-lowest p-5 shadow-sm sm:p-6">
         <div className="mb-6 flex flex-wrap items-center gap-3 text-xs font-semibold uppercase tracking-[0.22em] text-on-surface-variant">
-          <span className="text-primary">1. Choose time</span>
-          <span>2. Add details</span>
-          <span>3. Confirm</span>
+          <span className="text-primary">1. Share your topic</span>
+          <span>2. Add context</span>
+          <span>3. Send request</span>
         </div>
 
-        <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
-          <div className="space-y-5">
-            <div>
-              <p className="text-sm font-semibold text-on-surface">Choose a duration</p>
-              <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                {calendars.map((entry) => (
-                  <button
-                    key={entry.durationMinutes}
-                    type="button"
-                    onClick={() => setSelectedDuration(entry.durationMinutes)}
-                    className={`rounded-[14px] border px-4 py-4 text-left transition ${
-                      entry.durationMinutes === selectedDuration
-                        ? "border-primary bg-primary-container text-on-surface"
-                        : "border-on-surface/5 bg-surface text-on-surface-variant hover:border-primary/20 hover:text-on-surface"
-                    }`}
-                  >
-                    <span className="block text-lg font-bold">{entry.durationMinutes}</span>
-                    <span className="text-xs uppercase tracking-[0.18em]">minutes</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <p className="text-sm font-semibold text-on-surface">Choose your date</p>
-              <div className="mt-3 grid grid-cols-4 gap-3">
-                {activeCalendar?.dates.map((date) => {
-                  const isActive = date.isoDate === selectedDate;
-                  const isDisabled = date.times.length === 0;
-
-                  return (
-                    <button
-                      key={date.isoDate}
-                      type="button"
-                      disabled={isDisabled}
-                      onClick={() => {
-                        setSelectedDate(date.isoDate);
-                        setSelectedTime(date.times[0]?.iso ?? "");
-                      }}
-                      className={`rounded-[14px] border px-3 py-4 text-left transition ${
-                        isActive
-                          ? "border-primary bg-primary text-on-surface"
-                          : isDisabled
-                            ? "cursor-not-allowed border-on-surface/5 bg-surface text-on-surface/30"
-                            : "border-on-surface/5 bg-surface text-on-surface hover:border-primary/20"
-                      }`}
-                    >
-                      <span className="block text-[11px] font-semibold uppercase tracking-[0.18em]">{date.shortLabel}</span>
-                      <span className="mt-1 block text-2xl font-bold">{date.dayNumber}</span>
-                      <span className="text-xs">{date.monthLabel}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-
+        <div className="space-y-4">
           <div>
-            <p className="text-sm font-semibold text-on-surface">Available times</p>
-            <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
-              {activeDate?.times.length ? (
-                activeDate.times.map((time) => (
-                  <button
-                    key={time.iso}
-                    type="button"
-                    onClick={() => setSelectedTime(time.iso)}
-                    className={`rounded-[14px] border px-4 py-3 text-sm font-semibold transition ${
-                      activeTime === time.iso
-                        ? "border-primary bg-on-surface text-surface"
-                        : "border-on-surface/5 bg-surface text-on-surface hover:border-primary/20"
-                    }`}
-                  >
-                    {time.label}
-                  </button>
-                ))
-              ) : (
-                <div className="col-span-full rounded-[16px] border border-dashed border-on-surface/10 bg-surface p-5 text-sm text-on-surface-variant">
-                  {hasAnyBookableTimes
-                    ? "No openings are left for this day."
-                    : "This listener has not opened any bookable times yet."}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-8 space-y-4">
-          <div>
-            <label className="mb-2 block text-sm font-semibold text-on-surface">What would you like to talk about?</label>
+            <label className="mb-2 block text-sm font-semibold text-on-surface">What do you want support with?</label>
             <input
               type="text"
               value={topic}
               onChange={(event) => setTopic(event.target.value)}
-              placeholder="Stress, grief, work, relationships..."
+              placeholder="Stress, grief, burnout, relationships..."
               className="w-full rounded-[14px] border border-on-surface/5 bg-surface px-4 py-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
             />
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-semibold text-on-surface">Anything you want the listener to know?</label>
+            <label className="mb-2 block text-sm font-semibold text-on-surface">Anything the listener should know before accepting?</label>
             <textarea
               value={notes}
               onChange={(event) => setNotes(event.target.value)}
-              placeholder="Share context, goals, or anything you want to cover."
-              rows={5}
+              placeholder="Share a little context so they know how to meet you."
+              rows={7}
               className="w-full rounded-[14px] border border-on-surface/5 bg-surface px-4 py-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
             />
           </div>
+        </div>
+
+        <div className="mt-6 rounded-[16px] border border-primary/10 bg-primary-container/35 px-4 py-4 text-sm text-on-primary-container">
+          Once the listener accepts, the chat opens immediately for both of you on the shared session page.
         </div>
       </section>
 
@@ -245,21 +127,34 @@ export default function BookingSessionForm({ canBook, listener, calendars }: Boo
 
           <div className="mt-6 space-y-3 rounded-[16px] bg-surface px-4 py-4 text-sm">
             <div className="flex items-center justify-between gap-3">
-              <span className="text-on-surface-variant">Rate</span>
-              <span className="font-semibold text-on-surface">{formatCurrency(listener.ratePerMinuteCents)}/min</span>
+              <span className="text-on-surface-variant">Availability</span>
+              <span className="font-semibold text-on-surface">
+                {listener.isAvailableNow ? "Available now" : "Unavailable"}
+              </span>
             </div>
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-on-surface-variant">Date & time</span>
-              <span className="text-right font-semibold text-on-surface">{formatDateTime(activeTime)}</span>
+            <div className="flex items-start justify-between gap-3">
+              <span className="text-on-surface-variant">Top topics</span>
+              <span className="text-right font-semibold text-on-surface">
+                {listener.specialties.slice(0, 3).join(", ") || "Open support"}
+              </span>
             </div>
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-on-surface-variant">Length</span>
-              <span className="font-semibold text-on-surface">{selectedDuration} minutes</span>
+            <div className="flex items-start justify-between gap-3">
+              <span className="text-on-surface-variant">Languages</span>
+              <span className="text-right font-semibold text-on-surface">
+                {listener.languages.join(", ") || "Not listed"}
+              </span>
             </div>
-            <div className="flex items-center justify-between gap-3 border-t border-on-surface/5 pt-3">
-              <span className="text-on-surface-variant">Total</span>
-              <span className="text-xl font-bold text-on-surface">{formatCurrency(totalAmountCents)}</span>
-            </div>
+          </div>
+
+          <div className="mt-4 rounded-[16px] border border-on-surface/5 bg-surface px-4 py-4 text-sm">
+            <p className="font-semibold text-on-surface">Topic preview</p>
+            <p className="mt-2 text-on-surface-variant">
+              {topic.trim() || "Add a short topic so the listener knows what kind of support you need."}
+            </p>
+            <p className="mt-4 font-semibold text-on-surface">Context preview</p>
+            <p className="mt-2 line-clamp-5 text-on-surface-variant">
+              {notes.trim() || "Your extra context will appear here before you send the request."}
+            </p>
           </div>
 
           {error ? (
@@ -268,39 +163,31 @@ export default function BookingSessionForm({ canBook, listener, calendars }: Boo
 
           <button
             type="submit"
-            disabled={isPending || !canBook || !hasAnyBookableTimes}
+            disabled={isPending || !canRequest || !listener.isAvailableNow}
             className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-[14px] bg-primary px-5 py-3 text-sm font-semibold text-on-surface transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isPending ? <LoaderCircle className="h-4 w-4 animate-spin" /> : null}
-            {canBook ? "Confirm booking" : "Preview only"}
+            {canRequest ? "Send chat request" : "Preview only"}
           </button>
         </section>
 
         <section className="rounded-[20px] border border-on-surface/5 bg-surface-container-lowest p-5 shadow-sm">
           <div className="flex items-start gap-3">
-            <CalendarDays className="mt-0.5 h-5 w-5 text-primary" />
+            <MessageSquareMore className="mt-0.5 h-5 w-5 text-primary" />
             <div>
-              <p className="font-semibold text-on-surface">Booking details</p>
+              <p className="font-semibold text-on-surface">How this works</p>
               <p className="mt-1 text-sm leading-6 text-on-surface-variant">
-                Sessions are stored immediately after confirmation and appear in both user and listener session views.
+                Requests stay lightweight. You share your topic, the listener accepts when ready, and the conversation
+                begins in the same chat space.
               </p>
             </div>
           </div>
           <div className="mt-4 flex items-start gap-3">
-            <Clock3 className="mt-0.5 h-5 w-5 text-primary" />
+            <Sparkles className="mt-0.5 h-5 w-5 text-primary" />
             <div>
-              <p className="text-sm font-semibold text-on-surface">Real availability only</p>
+              <p className="text-sm font-semibold text-on-surface">No scheduling friction</p>
               <p className="text-sm leading-6 text-on-surface-variant">
-                The time grid only shows slots created from the listener&apos;s saved availability settings.
-              </p>
-            </div>
-          </div>
-          <div className="mt-4 flex items-start gap-3">
-            <NotebookText className="mt-0.5 h-5 w-5 text-primary" />
-            <div>
-              <p className="text-sm font-semibold text-on-surface">Payment comes later</p>
-              <p className="text-sm leading-6 text-on-surface-variant">
-                This step confirms the schedule now. Payment can be layered on top without changing the booking model.
+                If the listener is available, you can request a chat immediately and wait for them to accept.
               </p>
             </div>
           </div>

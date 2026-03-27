@@ -31,7 +31,7 @@ export default function AuthForm({
   const postAuthHint =
     role === "listen"
       ? isSignUp
-        ? "Listener signup opens your dashboard so you can finish your profile and availability."
+        ? "Listener signup opens your dashboard so you can finish your profile and turn on availability."
         : "Listener sign-in opens your dashboard."
       : isSignUp
         ? "Talker signup takes you straight to explore."
@@ -94,7 +94,7 @@ export default function AuthForm({
     role === "listen"
       ? {
           title: "Build your listener workspace.",
-          description: "Create a listener account, set your profile, choose your availability, and publish only when you are ready.",
+          description: "Create a listener account, set your profile, turn on availability, and accept requests when you are ready.",
           signUpHeading: "Create your listener account",
           signUpDescription: "Start your listener dashboard. Profile details and availability can be added after signup.",
           signInHeading: "Welcome back, listener",
@@ -104,7 +104,7 @@ export default function AuthForm({
         }
       : {
           title: "Find your perfect listener.",
-          description: "Browse real listener profiles, pick from saved availability, and keep every confirmed session in one place.",
+          description: "Browse real listener profiles, send a request, and start chatting when a listener accepts.",
           signUpHeading: "Create your account",
           signUpDescription: "Start your journey toward meaningful connection.",
           signInHeading: "Welcome back",
@@ -172,18 +172,18 @@ export default function AuthForm({
                   </p>
                   <p className="mt-1 text-sm leading-6 text-on-surface-variant">
                     {role === "listen"
-                      ? "After signup, add your public profile and weekly availability from the dashboard."
-                      : "Profiles only appear once a listener has published and added real availability."}
+                      ? "After signup, add your public profile and turn on availability from the dashboard."
+                      : "Profiles only appear once a listener has published and turned on live availability."}
                   </p>
                 </div>
                 <div className="rounded-[18px] border border-on-surface/6 bg-surface/80 px-4 py-4">
                   <p className="text-sm font-semibold text-on-surface">
-                    {role === "listen" ? "Publish when ready" : "Book from actual time slots"}
+                    {role === "listen" ? "Go live when ready" : "Request support directly"}
                   </p>
                   <p className="mt-1 text-sm leading-6 text-on-surface-variant">
                     {role === "listen"
-                      ? "Nothing is exposed to users until you publish your profile and turn on bookings."
-                      : "Booking options are generated from saved listener availability, not placeholder schedules."}
+                      ? "Nothing is exposed to users until you publish your profile and turn on availability."
+                      : "Send a request, wait for acceptance, and chat in the same shared session space."}
                   </p>
                 </div>
               </div>

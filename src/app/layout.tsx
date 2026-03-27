@@ -21,7 +21,7 @@ const plusJakartaSans = localFont({
 
 export const metadata: Metadata = {
   title: "Konfide - Talk to someone who actually gets it",
-  description: "Konfide connects you with verified peer listeners who have walked in your shoes. Professional support, human connection, zero judgment.",
+  description: "Konfide helps people connect with peer listeners through live request-and-chat conversations grounded in human connection and zero judgment.",
 };
 
 export default function RootLayout({

@@ -2,13 +2,23 @@ import "server-only";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@/generated/prisma";
 
-function getConnectionString() {
-  const databaseUrl = process.env.DATABASE_URL;
+const LOCAL_DATABASE_HOSTS = new Set(["localhost", "127.0.0.1", "::1", "0.0.0.0"]);
+
+function getConfiguredDatabaseUrl() {
+  const databaseUrl =
+    process.env.DATABASE_URL ??
+    process.env.POSTGRES_URL ??
+    process.env.POSTGRES_PRISMA_URL ??
+    process.env.POSTGRES_URL_NON_POOLING;
 
   if (!databaseUrl) {
     throw new Error("DATABASE_URL is not configured.");
   }
 
+  return databaseUrl;
+}
+
+function resolveConnectionString(databaseUrl: string) {
   if (databaseUrl.startsWith("prisma+postgres://")) {
     const url = new URL(databaseUrl);
     const apiKey = url.searchParams.get("api_key");
@@ -31,6 +41,28 @@ function getConnectionString() {
   return databaseUrl;
 }
 
+function assertHostedConnectionString(connectionString: string) {
+  try {
+    const url = new URL(connectionString);
+
+    if (process.env.VERCEL === "1" && LOCAL_DATABASE_HOSTS.has(url.hostname)) {
+      throw new Error(
+        "Production DATABASE_URL points to localhost. Configure a hosted Postgres database before deploying to Vercel."
+      );
+    }
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("hosted Postgres")) {
+      throw error;
+    }
+  }
+
+  return connectionString;
+}
+
+function getConnectionString() {
+  return assertHostedConnectionString(resolveConnectionString(getConfiguredDatabaseUrl()));
+}
+
 const globalForPrisma = globalThis as typeof globalThis & {
   prisma?: PrismaClient;
 };
@@ -39,17 +71,6 @@ function createPrismaClient() {
   return new PrismaClient({
     adapter: new PrismaPg({ connectionString: getConnectionString() }),
   });
-}
-
-function hasListenerProfileModel(client: PrismaClient | undefined) {
-  return typeof (client as PrismaClient & { listenerProfile?: unknown } | undefined)?.listenerProfile !== "undefined";
-}
-
-const existingClient = globalForPrisma.prisma;
-
-if (existingClient && !hasListenerProfileModel(existingClient)) {
-  void existingClient.$disconnect().catch(() => {});
-  globalForPrisma.prisma = undefined;
 }
 
 export const prisma = globalForPrisma.prisma ?? createPrismaClient();

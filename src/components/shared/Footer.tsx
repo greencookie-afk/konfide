@@ -10,8 +10,8 @@ export default function Footer() {
               Konfide
             </Link>
             <p className="text-sm leading-relaxed text-on-surface-variant sm:text-base">
-              Peer listening with real profiles, real availability, and booking flows that only show what is actually
-              ready to use.
+              Peer listening with real profiles, live availability, and direct request-to-chat conversations that keep
+              things simple.
             </p>
           </div>
 

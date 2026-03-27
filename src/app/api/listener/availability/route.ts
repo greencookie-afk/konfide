@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { getSessionUserFromRequest } from "@/server/auth/service";
 import { replaceListenerAvailability } from "@/server/availability/service";
@@ -26,15 +27,7 @@ export async function PUT(request: Request) {
   }
 
   let payload: {
-    timezone?: string;
-    defaultSessionMinutes?: number;
-    bufferMinutes?: number;
     acceptingNewBookings?: boolean;
-    slots?: Array<{
-      dayOfWeek: number;
-      startMinute: number;
-      endMinute: number;
-    }>;
   };
 
   try {
@@ -45,6 +38,10 @@ export async function PUT(request: Request) {
 
   try {
     await replaceListenerAvailability(user.id, payload);
+    revalidatePath("/explore");
+    revalidatePath("/listener/availability");
+    revalidatePath("/listener/dashboard");
+    revalidatePath("/listener/sessions");
 
     return NextResponse.json(
       { success: true },

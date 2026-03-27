@@ -10,6 +10,14 @@ function isSchemaMismatchError(error: unknown) {
   );
 }
 
+function isDatabaseUnavailableError(error: unknown) {
+  return error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P1001";
+}
+
+function isDatabaseConfigurationError(error: unknown) {
+  return error instanceof Error && error.message.includes("hosted Postgres database");
+}
+
 export async function POST(request: Request) {
   try {
     let payload: Record<string, string | undefined>;
@@ -44,6 +52,13 @@ export async function POST(request: Request) {
     if (isSchemaMismatchError(error)) {
       return NextResponse.json(
         { error: "Your database schema is out of date for auth. Run `npx prisma db push`, then restart `npm run dev`." },
+        { status: 503, headers: { "Cache-Control": "no-store" } }
+      );
+    }
+
+    if (isDatabaseUnavailableError(error) || isDatabaseConfigurationError(error)) {
+      return NextResponse.json(
+        { error: "Authentication is temporarily unavailable because the database connection is not ready yet." },
         { status: 503, headers: { "Cache-Control": "no-store" } }
       );
     }

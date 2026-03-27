@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarDays, Compass, LayoutList } from "lucide-react";
+import { Compass, LayoutList, MessageSquareMore } from "lucide-react";
 import Footer from "@/components/shared/Footer";
 import Navbar from "@/components/shared/Navbar";
 import HeroShowcase from "@/components/ui/HeroShowcase";
@@ -22,8 +22,8 @@ export default function Home() {
             Talk to someone who actually gets it.
           </h1>
           <p className="mx-auto mb-6 max-w-xl text-sm font-light leading-relaxed text-on-surface-variant sm:text-base md:text-lg">
-            Browse published listener profiles, choose from real availability, and keep every confirmed session in one
-            place.
+            Browse listeners who are available right now, send a request, and start chatting as soon as it is
+            accepted.
           </p>
           <div className="flex flex-wrap justify-center gap-3">
             <Link
@@ -54,30 +54,30 @@ export default function Home() {
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-surface text-primary">
                 <Compass className="h-6 w-6" />
               </div>
-              <h3 className="text-xl font-bold tracking-tight text-surface md:text-2xl">Real public profiles</h3>
+              <h3 className="text-xl font-bold tracking-tight text-surface md:text-2xl">Live listener discovery</h3>
               <p className="text-sm leading-relaxed text-surface/70 md:text-base">
-                Browse listeners by their actual profile, specialties, languages, and published rate instead of filler
+                Browse listeners by their real profile, specialties, and current availability instead of placeholder
                 cards.
               </p>
             </div>
             <div className="flex flex-col gap-4 border-b border-surface/10 p-8 transition-colors hover:bg-surface/5 md:border-b-0 md:border-r md:p-12 md:gap-6">
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-surface text-primary">
-                <CalendarDays className="h-6 w-6" />
+                <MessageSquareMore className="h-6 w-6" />
               </div>
-              <h3 className="text-xl font-bold tracking-tight text-surface md:text-2xl">Availability-first booking</h3>
+              <h3 className="text-xl font-bold tracking-tight text-surface md:text-2xl">Request, accept, chat</h3>
               <p className="text-sm leading-relaxed text-surface/70 md:text-base">
-                Booking options come from the listener&apos;s saved schedule, so you only see times that can actually be
-                confirmed.
+                The flow is intentionally light: send a request, let the listener accept, and start chatting in one
+                shared room.
               </p>
             </div>
             <div className="flex flex-col gap-4 p-8 transition-colors hover:bg-surface/5 md:p-12 md:gap-6">
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-surface text-primary">
                 <LayoutList className="h-6 w-6" />
               </div>
-              <h3 className="text-xl font-bold tracking-tight text-surface md:text-2xl">Sessions stay organized</h3>
+              <h3 className="text-xl font-bold tracking-tight text-surface md:text-2xl">Everything stays organized</h3>
               <p className="text-sm leading-relaxed text-surface/70 md:text-base">
-                After a booking is confirmed it shows up for both people, which keeps user sessions and listener
-                dashboards grounded in real activity.
+                Requests, accepted chats, and older conversations stay attached to the same session record so context is
+                never lost.
               </p>
             </div>
           </div>
@@ -96,28 +96,27 @@ export default function Home() {
             <div className="group flex flex-col gap-6 border border-on-surface/5 bg-surface p-8 transition-shadow hover:shadow-lg md:gap-8 md:p-10">
               <div className="text-5xl font-black text-primary/30 transition-colors group-hover:text-primary/60 md:text-6xl">01</div>
               <div>
-                <h4 className="mb-4 text-2xl font-bold">Browse the right fit</h4>
+                <h4 className="mb-4 text-2xl font-bold">Find the right fit</h4>
                 <p className="leading-relaxed text-on-surface-variant">
-                  Search by name, specialty, or topic and open a profile to see how a listener works before you book.
+                  Explore listener profiles, specialties, and languages before you decide who to reach out to.
                 </p>
               </div>
             </div>
             <div className="group flex flex-col gap-6 border border-on-surface/5 bg-surface p-8 transition-shadow hover:shadow-lg md:gap-8 md:p-10">
               <div className="text-5xl font-black text-primary/30 transition-colors group-hover:text-primary/60 md:text-6xl">02</div>
               <div>
-                <h4 className="mb-4 text-2xl font-bold">Book a real time slot</h4>
+                <h4 className="mb-4 text-2xl font-bold">Send a chat request</h4>
                 <p className="leading-relaxed text-on-surface-variant">
-                  Choose a duration, pick from saved availability, and confirm a session without placeholder schedules.
+                  Share your topic and a little context so the listener knows how to meet you well.
                 </p>
               </div>
             </div>
             <div className="group flex flex-col gap-6 border border-on-surface/5 bg-surface p-8 transition-shadow hover:shadow-lg md:gap-8 md:p-10">
               <div className="text-5xl font-black text-primary/30 transition-colors group-hover:text-primary/60 md:text-6xl">03</div>
               <div>
-                <h4 className="mb-4 text-2xl font-bold">See it in sessions</h4>
+                <h4 className="mb-4 text-2xl font-bold">Start talking</h4>
                 <p className="leading-relaxed text-on-surface-variant">
-                  Confirmed bookings appear in the user sessions view and in the listener workspace so both sides stay
-                  in sync.
+                  Once the listener accepts, the conversation begins in the shared chat without extra steps.
                 </p>
               </div>
             </div>
@@ -128,10 +127,10 @@ export default function Home() {
       <section className="bg-on-surface px-5 py-14 text-surface sm:px-6 md:px-8 md:py-24">
         <div className="mx-auto max-w-5xl text-center">
           <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary-container">Built for the next step</p>
-          <h2 className="mt-4 text-3xl font-bold tracking-tight md:text-4xl">Start with the booking flow that already works.</h2>
+          <h2 className="mt-4 text-3xl font-bold tracking-tight md:text-4xl">Keep the path to connection simple.</h2>
           <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-surface/75 md:text-base">
-            Listener profiles, availability, booking, sessions, and dashboard state now hang together. Payment can be
-            added later without rebuilding the basics.
+            Listener profiles, live availability, request acceptance, sessions, and chat now work together without
+            extra steps in the middle.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Link

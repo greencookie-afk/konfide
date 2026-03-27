@@ -1,27 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, CalendarDays, Clock3, Globe2, Languages } from "lucide-react";
+import { ArrowRight, CircleDot, Languages, MessageSquareMore } from "lucide-react";
 import { notFound } from "next/navigation";
 import Footer from "@/components/shared/Footer";
 import Navbar from "@/components/shared/Navbar";
 import { getListenerProfile } from "@/server/listeners/service";
-
-function formatPrice(ratePerMinuteCents: number) {
-  return `$${(ratePerMinuteCents / 100).toFixed(2)}`;
-}
-
-function formatAvailability(value: string | null) {
-  if (!value) {
-    return "No open time slots yet";
-  }
-
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(new Date(value));
-}
 
 export default async function ListenerProfilePage({
   params,
@@ -67,18 +50,16 @@ export default async function ListenerProfilePage({
               </div>
             </div>
 
-            <div className="mt-6 grid gap-3 sm:grid-cols-3">
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
               <div className="rounded-[16px] bg-surface px-4 py-4">
-                <p className="text-sm text-on-surface-variant">Rate</p>
-                <p className="mt-2 text-lg font-bold text-on-surface">{formatPrice(listener.ratePerMinuteCents)}/min</p>
+                <p className="text-sm text-on-surface-variant">Availability</p>
+                <p className="mt-2 text-lg font-bold text-on-surface">
+                  {listener.isAvailableNow ? "Available now" : "Unavailable right now"}
+                </p>
               </div>
               <div className="rounded-[16px] bg-surface px-4 py-4">
-                <p className="text-sm text-on-surface-variant">Next opening</p>
-                <p className="mt-2 text-lg font-bold text-on-surface">{formatAvailability(listener.nextAvailableAt)}</p>
-              </div>
-              <div className="rounded-[16px] bg-surface px-4 py-4">
-                <p className="text-sm text-on-surface-variant">Default session</p>
-                <p className="mt-2 text-lg font-bold text-on-surface">{listener.defaultSessionMinutes} minutes</p>
+                <p className="text-sm text-on-surface-variant">How chats begin</p>
+                <p className="mt-2 text-lg font-bold text-on-surface">Request first, chat after acceptance</p>
               </div>
             </div>
 
@@ -105,44 +86,59 @@ export default async function ListenerProfilePage({
                     <span>{listener.languages.join(", ") || "No languages added yet"}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Globe2 className="h-4 w-4 text-primary" />
-                    <span>{listener.timezone}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Clock3 className="h-4 w-4 text-primary" />
-                    <span>{listener.availabilityDayCount} day(s) currently open for booking</span>
+                    <CircleDot className="h-4 w-4 text-primary" />
+                    <span>{listener.isAvailableNow ? "Visible in browse right now" : "Hidden from browse right now"}</span>
                   </div>
                 </div>
               </section>
             </div>
+
+            <section className="mt-6 rounded-[18px] border border-on-surface/5 bg-surface px-4 py-4">
+              <h2 className="text-lg font-bold text-on-surface">What to expect</h2>
+              <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                <div className="rounded-[14px] bg-surface-container-low px-4 py-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-on-surface-variant">Step one</p>
+                  <p className="mt-2 text-sm font-semibold text-on-surface">Share your topic and context</p>
+                </div>
+                <div className="rounded-[14px] bg-surface-container-low px-4 py-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-on-surface-variant">Step two</p>
+                  <p className="mt-2 text-sm font-semibold text-on-surface">Wait for the listener to accept</p>
+                </div>
+                <div className="rounded-[14px] bg-surface-container-low px-4 py-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-on-surface-variant">Step three</p>
+                  <p className="mt-2 text-sm font-semibold text-on-surface">Chat opens immediately after acceptance</p>
+                </div>
+              </div>
+            </section>
           </div>
 
           <aside className="space-y-4">
             <section className="rounded-[20px] border border-primary/10 bg-primary-container p-5 shadow-sm sm:p-6">
-              <p className="text-xs font-bold uppercase tracking-[0.24em] text-on-primary-container">Book with {listener.name}</p>
-              <p className="mt-3 text-2xl font-bold tracking-tight text-on-primary-container">Pick a time that already exists on their calendar.</p>
+              <p className="text-xs font-bold uppercase tracking-[0.24em] text-on-primary-container">Connect with {listener.name}</p>
+              <p className="mt-3 text-2xl font-bold tracking-tight text-on-primary-container">Send a request when the fit feels right.</p>
               <p className="mt-3 text-sm leading-6 text-on-primary-container/80">
-                Booking options are generated from this listener&apos;s saved availability. Payment can be added later on
-                top of the same scheduling flow.
+                This flow stays simple for now. Just a direct request that the listener can accept when ready.
               </p>
 
               <div className="mt-5 rounded-[16px] bg-surface px-4 py-4 text-sm">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-on-surface-variant">Next opening</span>
-                  <span className="font-semibold text-on-surface">{formatAvailability(listener.nextAvailableAt)}</span>
+                  <span className="text-on-surface-variant">Status</span>
+                  <span className="font-semibold text-on-surface">
+                    {listener.isAvailableNow ? "Accepting requests" : "Not accepting requests"}
+                  </span>
                 </div>
                 <div className="mt-3 flex items-center justify-between gap-3">
-                  <span className="text-on-surface-variant">Starts at</span>
-                  <span className="font-semibold text-on-surface">{formatPrice(listener.ratePerMinuteCents)}/min</span>
+                  <span className="text-on-surface-variant">Flow</span>
+                  <span className="font-semibold text-on-surface">Request, accept, chat</span>
                 </div>
               </div>
 
               <div className="mt-5 grid gap-3">
                 <Link
-                  href={`/explore/${listener.slug}/book`}
+                  href={`/explore/${listener.slug}/connect`}
                   className="inline-flex items-center justify-center gap-2 rounded-[16px] bg-primary px-5 py-3 text-sm font-semibold text-on-surface transition hover:opacity-90"
                 >
-                  Continue to booking
+                  Send a request
                   <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link
@@ -155,15 +151,15 @@ export default async function ListenerProfilePage({
             </section>
 
             <section className="rounded-[20px] border border-on-surface/5 bg-surface-container-lowest p-5 shadow-sm">
-              <h2 className="text-lg font-bold text-on-surface">What booking looks like</h2>
+              <h2 className="text-lg font-bold text-on-surface">Why this is lighter</h2>
               <div className="mt-4 space-y-4 text-sm text-on-surface-variant">
                 <div className="flex items-start gap-3">
-                  <CalendarDays className="mt-0.5 h-4 w-4 text-primary" />
-                  <p>Choose a duration, then select one of the open dates and times.</p>
+                  <MessageSquareMore className="mt-0.5 h-4 w-4 text-primary" />
+                  <p>Talkers only need to explain what they need help with.</p>
                 </div>
                 <div className="flex items-start gap-3">
-                  <Clock3 className="mt-0.5 h-4 w-4 text-primary" />
-                  <p>Confirmed bookings appear in your sessions page and in the listener workspace.</p>
+                  <CircleDot className="mt-0.5 h-4 w-4 text-primary" />
+                  <p>Listeners control visibility with one availability switch inside their workspace.</p>
                 </div>
               </div>
             </section>

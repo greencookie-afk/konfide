@@ -17,9 +17,6 @@ function buildBrowseWhere(filters: Pick<BrowseListenersFilters, "query" | "topic
               acceptingNewBookings: true,
             },
           },
-          listenerAvailabilitySlots: {
-            some: {},
-          },
         },
       },
     },
@@ -75,9 +72,6 @@ export async function listPublishedListenerProfiles(filters: BrowseListenersFilt
           name: true,
           avatarUrl: true,
           listenerSettings: true,
-          listenerAvailabilitySlots: {
-            orderBy: [{ dayOfWeek: "asc" }, { startMinute: "asc" }],
-          },
         },
       },
     },
@@ -102,9 +96,6 @@ export async function listListenerTopics() {
             is: {
               acceptingNewBookings: true,
             },
-          },
-          listenerAvailabilitySlots: {
-            some: {},
           },
         },
       },
@@ -132,9 +123,6 @@ export async function findPublishedListenerBySlug(slug: string) {
               acceptingNewBookings: true,
             },
           },
-          listenerAvailabilitySlots: {
-            some: {},
-          },
         },
       },
     },
@@ -145,9 +133,6 @@ export async function findPublishedListenerBySlug(slug: string) {
           name: true,
           avatarUrl: true,
           listenerSettings: true,
-          listenerAvailabilitySlots: {
-            orderBy: [{ dayOfWeek: "asc" }, { startMinute: "asc" }],
-          },
         },
       },
     },
@@ -162,6 +147,11 @@ export async function findListenerProfileByUserId(userId: string) {
     select: {
       name: true,
       avatarUrl: true,
+      listenerSettings: {
+        select: {
+          acceptingNewBookings: true,
+        },
+      },
       listenerProfile: true,
     },
   });
@@ -173,7 +163,6 @@ export async function upsertListenerProfile(
     slug: string;
     headline: string | null;
     about: string | null;
-    ratePerMinuteCents: number | null;
     specialties: string[];
     languages: string[];
     isPublished: boolean;
@@ -188,7 +177,6 @@ export async function upsertListenerProfile(
       slug: data.slug,
       headline: data.headline,
       about: data.about,
-      ratePerMinuteCents: data.ratePerMinuteCents,
       specialties: data.specialties,
       languages: data.languages,
       isPublished: data.isPublished,
@@ -197,7 +185,6 @@ export async function upsertListenerProfile(
       slug: data.slug,
       headline: data.headline,
       about: data.about,
-      ratePerMinuteCents: data.ratePerMinuteCents,
       specialties: data.specialties,
       languages: data.languages,
       isPublished: data.isPublished,

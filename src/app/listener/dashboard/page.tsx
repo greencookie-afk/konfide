@@ -1,23 +1,11 @@
 import Link from "next/link";
-import {
-  BadgeCheck,
-  CalendarDays,
-  CircleDollarSign,
-  Clock3,
-  NotebookPen,
-  Settings2,
-  Sparkles,
-} from "lucide-react";
+import { BadgeCheck, CalendarDays, Clock3, NotebookPen, Settings2, Sparkles } from "lucide-react";
 import { getDefaultListenerSettings } from "@/server/availability/service";
 import { requireUser } from "@/server/auth/server";
 import { getListenerDashboardData } from "@/server/sessions/service";
 
-function formatCurrency(cents: number) {
-  return `$${(cents / 100).toFixed(2)}`;
-}
-
 function formatDateTime(value: Date) {
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat("en-IN", {
     month: "short",
     day: "numeric",
     hour: "numeric",
@@ -38,34 +26,30 @@ export default async function ListenerDashboardPage() {
         <p className="mb-2 text-xs font-bold uppercase tracking-[0.24em] text-primary">Listener dashboard</p>
         <h1 className="text-3xl font-bold tracking-tight md:text-4xl">Welcome back, {dashboard.name}.</h1>
         <p className="mt-3 max-w-2xl text-sm leading-6 text-on-surface-variant md:text-base">
-          Everything here is driven by your actual profile, availability, and booked sessions. No demo metrics are
-          shown.
+          Your workspace is now centered on live availability, incoming requests, and active conversations.
         </p>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         <article className="rounded-[18px] border border-on-surface/5 bg-surface-container-lowest p-5 shadow-sm">
-          <p className="text-sm text-on-surface-variant">Total earnings</p>
-          <p className="mt-2 text-3xl font-bold text-on-surface">{formatCurrency(dashboard.totalEarningsCents)}</p>
-          <p className="mt-2 text-sm text-on-surface-variant">{dashboard.completedSessionsCount} completed session(s)</p>
-        </article>
-        <article className="rounded-[18px] border border-on-surface/5 bg-surface-container-lowest p-5 shadow-sm">
-          <p className="text-sm text-on-surface-variant">Profile completion</p>
-          <p className="mt-2 text-3xl font-bold text-on-surface">{dashboard.profileCompletion}%</p>
+          <p className="text-sm text-on-surface-variant">Visibility</p>
+          <p className="mt-2 text-3xl font-bold text-on-surface">
+            {settings.acceptingNewBookings ? "Available now" : "Hidden"}
+          </p>
           <p className="mt-2 text-sm text-on-surface-variant">
-            {isPublished ? "Published and visible in browse" : "Not published to users yet"}
+            {isPublished ? "Your published profile can follow this switch." : "Publish your profile before going live."}
           </p>
         </article>
         <article className="rounded-[18px] border border-on-surface/5 bg-surface-container-lowest p-5 shadow-sm">
-          <p className="text-sm text-on-surface-variant">Upcoming sessions</p>
-          <p className="mt-2 text-3xl font-bold text-on-surface">{dashboard.upcomingSessionsCount}</p>
-          <p className="mt-2 text-sm text-on-surface-variant">{dashboard.availabilityDays} day(s) open on your calendar</p>
+          <p className="text-sm text-on-surface-variant">Incoming requests</p>
+          <p className="mt-2 text-3xl font-bold text-on-surface">{dashboard.pendingRequestsCount}</p>
+          <p className="mt-2 text-sm text-on-surface-variant">Accept a request to open chat immediately.</p>
         </article>
         <article className="rounded-[18px] border border-on-surface/5 bg-surface-container-lowest p-5 shadow-sm">
-          <p className="text-sm text-on-surface-variant">Booking status</p>
-          <p className="mt-2 text-2xl font-bold text-on-surface">{settings.acceptingNewBookings ? "Accepting" : "Paused"}</p>
+          <p className="text-sm text-on-surface-variant">Total connections</p>
+          <p className="mt-2 text-3xl font-bold text-on-surface">{dashboard.totalConnectionsCount}</p>
           <p className="mt-2 text-sm text-on-surface-variant">
-            {settings.defaultSessionMinutes} min sessions, {settings.bufferMinutes} min buffer
+            {dashboard.activeSessionsCount} active conversation{dashboard.activeSessionsCount === 1 ? "" : "s"} right now
           </p>
         </article>
       </section>
@@ -76,7 +60,7 @@ export default async function ListenerDashboardPage() {
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.24em] text-on-primary-container">Workspace status</p>
               <h2 className="mt-3 text-2xl font-bold tracking-tight text-on-primary-container">
-                {hasProfile ? "Your listener listing is saved." : "Your listener profile has not been started yet."}
+                {hasProfile ? "Your listener profile is ready to manage." : "Your listener profile has not been started yet."}
               </h2>
             </div>
             <Sparkles className="h-5 w-5 text-on-primary-container" />
@@ -94,9 +78,9 @@ export default async function ListenerDashboardPage() {
               <span className="font-semibold text-on-surface">{isPublished ? "Published" : "Draft"}</span>
             </div>
             <div className="flex items-center justify-between gap-3">
-              <span className="text-on-surface-variant">Rate</span>
+              <span className="text-on-surface-variant">Availability</span>
               <span className="font-semibold text-on-surface">
-                {dashboard.profile?.ratePerMinuteCents ? `${formatCurrency(dashboard.profile.ratePerMinuteCents)}/min` : "Not set"}
+                {settings.acceptingNewBookings ? "Accepting requests" : "Hidden from browse"}
               </span>
             </div>
           </div>
@@ -120,31 +104,27 @@ export default async function ListenerDashboardPage() {
         </article>
 
         <article className="rounded-[20px] border border-on-surface/5 bg-surface-container-lowest p-5 shadow-sm sm:p-6">
-          <h2 className="text-xl font-bold text-on-surface">Booking settings</h2>
+          <h2 className="text-xl font-bold text-on-surface">Live workflow</h2>
           <div className="mt-5 space-y-4 text-sm text-on-surface-variant">
             <div className="flex items-start gap-3 rounded-[16px] bg-surface px-4 py-4">
               <CalendarDays className="mt-0.5 h-4 w-4 text-primary" />
               <div>
-                <p className="font-semibold text-on-surface">Timezone</p>
-                <p className="mt-1">{settings.timezone}</p>
+                <p className="font-semibold text-on-surface">Go visible</p>
+                <p className="mt-1">Turn on availability whenever you want to appear in browse.</p>
               </div>
             </div>
             <div className="flex items-start gap-3 rounded-[16px] bg-surface px-4 py-4">
               <Clock3 className="mt-0.5 h-4 w-4 text-primary" />
               <div>
-                <p className="font-semibold text-on-surface">Session defaults</p>
-                <p className="mt-1">{settings.defaultSessionMinutes} minute sessions with a {settings.bufferMinutes} minute buffer</p>
+                <p className="font-semibold text-on-surface">Accept when ready</p>
+                <p className="mt-1">Incoming requests wait safely until you choose to accept them.</p>
               </div>
             </div>
             <div className="flex items-start gap-3 rounded-[16px] bg-surface px-4 py-4">
               <BadgeCheck className="mt-0.5 h-4 w-4 text-primary" />
               <div>
-                <p className="font-semibold text-on-surface">Availability</p>
-                <p className="mt-1">
-                  {dashboard.availabilityDays > 0
-                    ? `${dashboard.availabilityDays} day(s) currently open for users to book`
-                    : "Add availability blocks before users can see bookable times."}
-                </p>
+                <p className="font-semibold text-on-surface">Start chatting</p>
+                <p className="mt-1">The chat opens immediately for both people after acceptance.</p>
               </div>
             </div>
           </div>
@@ -155,22 +135,20 @@ export default async function ListenerDashboardPage() {
         <article className="rounded-[20px] border border-on-surface/5 bg-surface-container-lowest p-5 shadow-sm sm:p-6">
           <div className="flex items-center gap-3">
             <CalendarDays className="h-5 w-5 text-primary" />
-            <h2 className="text-xl font-bold">Upcoming bookings</h2>
+            <h2 className="text-xl font-bold">Pending requests</h2>
           </div>
           <div className="mt-5 space-y-3">
-            {dashboard.upcomingSessions.length ? (
-              dashboard.upcomingSessions.map((session) => (
+            {dashboard.pendingRequests.length ? (
+              dashboard.pendingRequests.map((session) => (
                 <div key={session.id} className="rounded-[16px] bg-surface px-4 py-4">
-                  <p className="font-semibold text-on-surface">{session.topic || "Support session"}</p>
-                  <p className="mt-1 text-sm text-on-surface-variant">{formatDateTime(session.scheduledAt)}</p>
-                  <p className="mt-2 text-sm text-on-surface-variant">
-                    {session.durationMinutes} minutes · {formatCurrency(session.totalAmountCents)}
-                  </p>
+                  <p className="font-semibold text-on-surface">{session.talker.name ?? "Konfide member"}</p>
+                  <p className="mt-1 text-sm text-on-surface-variant">{session.topic || "Support conversation"}</p>
+                  <p className="mt-2 text-sm text-on-surface-variant">Sent {formatDateTime(session.createdAt)}</p>
                 </div>
               ))
             ) : (
               <div className="rounded-[16px] border border-dashed border-on-surface/10 bg-surface px-4 py-5 text-sm text-on-surface-variant">
-                No upcoming bookings yet. Once someone confirms a session, it will appear here automatically.
+                No pending requests yet.
               </div>
             )}
           </div>
@@ -178,23 +156,21 @@ export default async function ListenerDashboardPage() {
 
         <article className="rounded-[20px] border border-on-surface/5 bg-surface-container-lowest p-5 shadow-sm sm:p-6">
           <div className="flex items-center gap-3">
-            <CircleDollarSign className="h-5 w-5 text-primary" />
-            <h2 className="text-xl font-bold">Recent completed sessions</h2>
+            <Clock3 className="h-5 w-5 text-primary" />
+            <h2 className="text-xl font-bold">Recent conversations</h2>
           </div>
           <div className="mt-5 space-y-3">
-            {dashboard.recentCompletedSessions.length ? (
-              dashboard.recentCompletedSessions.map((session) => (
+            {dashboard.recentSessions.length ? (
+              dashboard.recentSessions.map((session) => (
                 <div key={session.id} className="rounded-[16px] bg-surface px-4 py-4">
-                  <p className="font-semibold text-on-surface">{session.topic || "Support session"}</p>
-                  <p className="mt-1 text-sm text-on-surface-variant">{formatDateTime(session.scheduledAt)}</p>
-                  <p className="mt-2 text-sm text-on-surface-variant">
-                    Earned {formatCurrency(session.totalAmountCents)} from this session
-                  </p>
+                  <p className="font-semibold text-on-surface">{session.talker.name ?? "Konfide member"}</p>
+                  <p className="mt-1 text-sm text-on-surface-variant">{session.topic || "Support conversation"}</p>
+                  <p className="mt-2 text-sm text-on-surface-variant">Started {formatDateTime(session.scheduledAt)}</p>
                 </div>
               ))
             ) : (
               <div className="rounded-[16px] border border-dashed border-on-surface/10 bg-surface px-4 py-5 text-sm text-on-surface-variant">
-                Earnings will start appearing after your first completed session.
+                Conversations you have already accepted will appear here.
               </div>
             )}
           </div>

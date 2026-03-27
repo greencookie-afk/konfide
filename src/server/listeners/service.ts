@@ -1,9 +1,5 @@
 import "server-only";
 import {
-  buildBookableCalendarFromSource,
-  getDefaultListenerSettings,
-} from "@/server/availability/service";
-import {
   countPublishedListenerProfiles,
   findListenerProfileByUserId,
   findPublishedListenerBySlug,
@@ -35,7 +31,6 @@ export type ListenerProfileInput = {
   slug?: string;
   headline?: string;
   about?: string;
-  ratePerMinuteCents?: number | null;
   specialties?: string[];
   languages?: string[];
   isPublished?: boolean;
@@ -56,7 +51,7 @@ function normalizeSort(value: string | null | undefined): ListenerSort {
     return value as ListenerSort;
   }
 
-  return "soonest";
+  return "recent";
 }
 
 function normalizeList(values: string[] | undefined) {
@@ -73,16 +68,6 @@ function normalizeSlug(value: string | undefined) {
 }
 
 function mapListener(record: Awaited<ReturnType<typeof listPublishedListenerProfiles>>[number]): ListenerSummary {
-  const settings = record.user.listenerSettings ?? getDefaultListenerSettings();
-  const calendar = buildBookableCalendarFromSource(
-    {
-      settings,
-      slots: record.user.listenerAvailabilitySlots,
-      bookings: [],
-    },
-    settings.defaultSessionMinutes
-  );
-
   return {
     userId: record.user.id,
     slug: record.slug,
@@ -90,40 +75,18 @@ function mapListener(record: Awaited<ReturnType<typeof listPublishedListenerProf
     avatarUrl: record.user.avatarUrl,
     headline: record.headline ?? "",
     about: record.about ?? "",
-    ratePerMinuteCents: record.ratePerMinuteCents ?? 0,
-    defaultSessionMinutes: settings.defaultSessionMinutes,
     specialties: record.specialties,
     languages: record.languages,
-    timezone: settings.timezone,
-    acceptingNewBookings: settings.acceptingNewBookings,
-    nextAvailableAt: calendar.nextAvailableAt,
+    isAvailableNow: record.user.listenerSettings?.acceptingNewBookings ?? false,
   };
 }
 
 function sortListeners(listeners: ListenerSummary[], sort: ListenerSort) {
-  return [...listeners].sort((left, right) => {
-    if (sort === "price-low") {
-      return left.ratePerMinuteCents - right.ratePerMinuteCents || left.name.localeCompare(right.name);
-    }
+  if (sort === "name") {
+    return [...listeners].sort((left, right) => left.name.localeCompare(right.name));
+  }
 
-    if (sort === "price-high") {
-      return right.ratePerMinuteCents - left.ratePerMinuteCents || left.name.localeCompare(right.name);
-    }
-
-    if (left.nextAvailableAt && right.nextAvailableAt) {
-      return new Date(left.nextAvailableAt).getTime() - new Date(right.nextAvailableAt).getTime();
-    }
-
-    if (left.nextAvailableAt) {
-      return -1;
-    }
-
-    if (right.nextAvailableAt) {
-      return 1;
-    }
-
-    return left.name.localeCompare(right.name);
-  });
+  return listeners;
 }
 
 export function normalizeBrowseListenersInput(input: BrowseListenersInput): BrowseListenersFilters {
@@ -165,18 +128,9 @@ export async function getBrowseListeners(filters: BrowseListenersFilters): Promi
 export async function getListenerProfile(slug: string): Promise<ListenerDetail | null> {
   const listener = await findPublishedListenerBySlug(slug);
 
-  if (!listener || !listener.user.listenerSettings) {
+  if (!listener) {
     return null;
   }
-
-  const calendar = buildBookableCalendarFromSource(
-    {
-      settings: listener.user.listenerSettings,
-      slots: listener.user.listenerAvailabilitySlots,
-      bookings: [],
-    },
-    listener.user.listenerSettings.defaultSessionMinutes
-  );
 
   return {
     userId: listener.user.id,
@@ -185,15 +139,10 @@ export async function getListenerProfile(slug: string): Promise<ListenerDetail |
     avatarUrl: listener.user.avatarUrl,
     headline: listener.headline ?? "",
     about: listener.about ?? "",
-    ratePerMinuteCents: listener.ratePerMinuteCents ?? 0,
-    defaultSessionMinutes: listener.user.listenerSettings.defaultSessionMinutes,
     specialties: listener.specialties,
     languages: listener.languages,
-    timezone: listener.user.listenerSettings.timezone,
-    acceptingNewBookings: listener.user.listenerSettings.acceptingNewBookings,
-    nextAvailableAt: calendar.nextAvailableAt,
+    isAvailableNow: listener.user.listenerSettings?.acceptingNewBookings ?? false,
     isPublished: listener.isPublished,
-    availabilityDayCount: listener.user.listenerAvailabilitySlots.length,
   };
 }
 
@@ -203,10 +152,10 @@ export async function getListenerProfileEditorData(userId: string): Promise<List
   return {
     name: user?.name ?? "",
     avatarUrl: user?.avatarUrl ?? null,
+    isAvailableNow: user?.listenerSettings?.acceptingNewBookings ?? false,
     slug: user?.listenerProfile?.slug ?? "",
     headline: user?.listenerProfile?.headline ?? "",
     about: user?.listenerProfile?.about ?? "",
-    ratePerMinuteCents: user?.listenerProfile?.ratePerMinuteCents ?? null,
     specialties: user?.listenerProfile?.specialties ?? [],
     languages: user?.listenerProfile?.languages ?? [],
     isPublished: user?.listenerProfile?.isPublished ?? false,
@@ -219,7 +168,6 @@ export async function saveListenerProfile(userId: string, input: ListenerProfile
   const about = input.about?.trim() || null;
   const specialties = normalizeList(input.specialties);
   const languages = normalizeList(input.languages);
-  const ratePerMinuteCents = input.ratePerMinuteCents ?? null;
   const isPublished = Boolean(input.isPublished);
 
   if (!slug) {
@@ -230,19 +178,14 @@ export async function saveListenerProfile(userId: string, input: ListenerProfile
     throw new Error("That public profile URL is already taken.");
   }
 
-  if (ratePerMinuteCents !== null && (!Number.isInteger(ratePerMinuteCents) || ratePerMinuteCents < 1)) {
-    throw new Error("Set a valid price per minute.");
-  }
-
-  if (isPublished && (!headline || !about || !ratePerMinuteCents || specialties.length === 0)) {
-    throw new Error("Complete the headline, about, price, and specialties before publishing.");
+  if (isPublished && (!headline || !about || specialties.length === 0)) {
+    throw new Error("Complete the headline, about section, and specialties before publishing.");
   }
 
   return upsertListenerProfile(userId, {
     slug,
     headline,
     about,
-    ratePerMinuteCents,
     specialties,
     languages,
     isPublished,

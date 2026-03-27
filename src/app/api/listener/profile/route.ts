@@ -29,7 +29,6 @@ export async function PUT(request: Request) {
     slug?: string;
     headline?: string;
     about?: string;
-    ratePerMinuteCents?: number | null;
     specialties?: string[];
     languages?: string[];
     isPublished?: boolean;

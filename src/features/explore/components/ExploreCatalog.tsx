@@ -38,7 +38,7 @@ export default function ExploreCatalog({ browseResult }: ExploreCatalogProps) {
                 page: 1,
                 query: "",
                 topic: null,
-                sort: "soonest",
+                sort: "recent",
               })}
               className="inline-flex rounded-[14px] bg-primary px-5 py-3 text-sm font-semibold text-on-surface transition hover:opacity-90"
             >

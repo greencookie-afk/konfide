@@ -1,24 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, CalendarDays, Clock3, Languages } from "lucide-react";
+import { ArrowRight, CircleDot, Languages, MessageSquareMore } from "lucide-react";
 import type { ListenerSummary } from "@/server/listeners/types";
-
-function formatPrice(ratePerMinuteCents: number) {
-  return `$${(ratePerMinuteCents / 100).toFixed(2)}`;
-}
-
-function formatNextAvailable(value: string | null) {
-  if (!value) {
-    return "No open times yet";
-  }
-
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(new Date(value));
-}
 
 type ListenerCardProps = {
   listener: ListenerSummary;
@@ -50,11 +33,16 @@ export default function ListenerCard({ listener }: ListenerCardProps) {
             <p className="mt-1 text-sm font-medium text-on-surface">{listener.headline}</p>
           </div>
         </div>
-
-        <div className="text-right">
-          <p className="text-lg font-bold text-on-surface">{formatPrice(listener.ratePerMinuteCents)}</p>
-          <p className="text-xs text-on-surface-variant">per minute</p>
-        </div>
+        <span
+          className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] ${
+            listener.isAvailableNow
+              ? "bg-primary-container text-on-primary-container"
+              : "bg-surface text-on-surface-variant ring-1 ring-on-surface/8"
+          }`}
+        >
+          <CircleDot className="h-3.5 w-3.5" />
+          {listener.isAvailableNow ? "Available now" : "Unavailable"}
+        </span>
       </div>
 
       <p className="mt-4 line-clamp-3 text-sm leading-6 text-on-surface-variant">{listener.about}</p>
@@ -62,23 +50,18 @@ export default function ListenerCard({ listener }: ListenerCardProps) {
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <div className="rounded-[14px] bg-surface px-3 py-3 text-sm text-on-surface-variant">
           <div className="flex items-center gap-2 text-on-surface">
-            <CalendarDays className="h-4 w-4 text-primary" />
-            <span className="font-semibold">Next opening</span>
+            <MessageSquareMore className="h-4 w-4 text-primary" />
+            <span className="font-semibold">How it starts</span>
           </div>
-          <p className="mt-2 text-sm">{formatNextAvailable(listener.nextAvailableAt)}</p>
+          <p className="mt-2 text-sm">Send a request and wait for acceptance.</p>
         </div>
         <div className="rounded-[14px] bg-surface px-3 py-3 text-sm text-on-surface-variant">
           <div className="flex items-center gap-2 text-on-surface">
-            <Clock3 className="h-4 w-4 text-primary" />
-            <span className="font-semibold">Typical booking</span>
+            <Languages className="h-4 w-4 text-primary" />
+            <span className="font-semibold">Languages</span>
           </div>
-          <p className="mt-2 text-sm">{listener.defaultSessionMinutes} minutes</p>
+          <p className="mt-2 text-sm">{listener.languages.join(", ") || "Not listed yet"}</p>
         </div>
-      </div>
-
-      <div className="mt-4 flex items-center gap-2 text-sm text-on-surface-variant">
-        <Languages className="h-4 w-4 text-primary" />
-        <span className="line-clamp-1">{listener.languages.join(", ") || listener.timezone}</span>
       </div>
 
       <div className="mt-4 flex flex-wrap gap-2">
@@ -101,10 +84,10 @@ export default function ListenerCard({ listener }: ListenerCardProps) {
           <ArrowRight className="h-4 w-4" />
         </Link>
         <Link
-          href={`/explore/${listener.slug}/book`}
+          href={`/explore/${listener.slug}/connect`}
           className="inline-flex items-center justify-center rounded-[14px] border border-on-surface/10 bg-surface px-4 py-3 text-sm font-semibold text-on-surface transition hover:border-primary/20 hover:text-primary"
         >
-          Book
+          Request chat
         </Link>
       </div>
     </article>

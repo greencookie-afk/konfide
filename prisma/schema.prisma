@@ -24,6 +24,14 @@ enum SessionStatus {
   CANCELLED
 }
 
+enum SessionPaymentStatus {
+  UNPAID
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
 model User {
   id                        String                     @id @default(cuid())
   name                      String?
@@ -38,6 +46,7 @@ model User {
   listenerAvailabilitySlots ListenerAvailabilitySlot[] @relation("ListenerAvailabilitySlots")
   listenerSessions          SessionBooking[]           @relation("ListenerSessions")
   talkerSessions            SessionBooking[]           @relation("TalkerSessions")
+  sentSessionMessages       SessionChatMessage[]
   createdAt                 DateTime                   @default(now())
   updatedAt                 DateTime                   @updatedAt
 }
@@ -100,22 +109,44 @@ model ListenerAvailabilitySlot {
 }
 
 model SessionBooking {
-  id                String        @id @default(cuid())
-  listenerId        String
-  talkerId          String
-  scheduledAt       DateTime
-  durationMinutes   Int
-  topic             String?
-  notes             String?
-  ratePerMinuteCents Int
-  totalAmountCents  Int
-  status            SessionStatus @default(CONFIRMED)
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  id                     String               @id @default(cuid())
+  listenerId             String
+  talkerId               String
+  scheduledAt            DateTime
+  durationMinutes        Int
+  topic                  String?
+  notes                  String?
+  ratePerMinuteCents     Int
+  totalAmountCents       Int
+  status                 SessionStatus        @default(CONFIRMED)
+  paymentStatus          SessionPaymentStatus @default(UNPAID)
+  paymentOrderId         String?
+  paymentTransactionId   String?
+  paymentSignature       String?
+  paidAt                 DateTime?
+  createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @updatedAt
 
   listener User @relation("ListenerSessions", fields: [listenerId], references: [id], onDelete: Cascade)
   talker   User @relation("TalkerSessions", fields: [talkerId], references: [id], onDelete: Cascade)
+  messages SessionChatMessage[]
 
   @@index([listenerId, scheduledAt])
   @@index([talkerId, scheduledAt])
+  @@index([paymentStatus, scheduledAt])
+}
+
+model SessionChatMessage {
+  id        String         @id @default(cuid())
+  sessionId String
+  senderId  String
+  body      String
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  session SessionBooking @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sender  User           @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, createdAt])
+  @@index([senderId, createdAt])
 }

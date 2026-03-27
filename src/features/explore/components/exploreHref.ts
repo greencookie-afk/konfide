@@ -17,7 +17,7 @@ export function buildExploreHref(filters: BrowseListenersFilters, overrides: Exp
     params.set("topic", nextFilters.topic);
   }
 
-  if (nextFilters.sort !== "soonest") {
+  if (nextFilters.sort !== "recent") {
     params.set("sort", nextFilters.sort);
   }
 

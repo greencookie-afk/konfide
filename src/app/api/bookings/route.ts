@@ -1,6 +1,7 @@
+import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { getSessionUserFromRequest } from "@/server/auth/service";
-import { createSessionBooking } from "@/server/sessions/service";
+import { createConversationRequest } from "@/server/sessions/service";
 
 function jsonError(message: string, status: number) {
   return NextResponse.json(
@@ -18,17 +19,15 @@ export async function POST(request: Request) {
   const user = await getSessionUserFromRequest(request);
 
   if (!user) {
-    return jsonError("Sign in before booking a session.", 401);
+    return jsonError("Sign in before sending a request.", 401);
   }
 
   if (user.role !== "TALKER") {
-    return jsonError("Only user accounts can book a session.", 403);
+    return jsonError("Only talker accounts can send a request.", 403);
   }
 
   let payload: {
     listenerSlug?: string;
-    scheduledAtIso?: string;
-    durationMinutes?: number;
     topic?: string;
     notes?: string;
   };
@@ -36,18 +35,34 @@ export async function POST(request: Request) {
   try {
     payload = (await request.json()) as typeof payload;
   } catch {
-    return jsonError("Invalid booking request.", 400);
+    return jsonError("Invalid request payload.", 400);
   }
 
   try {
-    const booking = await createSessionBooking({
+    const booking = await createConversationRequest({
       talkerId: user.id,
       listenerSlug: payload.listenerSlug ?? "",
-      scheduledAtIso: payload.scheduledAtIso ?? "",
-      durationMinutes: Number(payload.durationMinutes ?? 0),
       topic: payload.topic,
       notes: payload.notes,
     });
+
+    const listenerSlug = payload.listenerSlug?.trim();
+
+    revalidatePath("/explore");
+    revalidatePath("/sessions");
+    revalidatePath("/listener/dashboard");
+    revalidatePath("/listener/availability");
+    revalidatePath("/listener/sessions");
+    revalidatePath(`/sessions/${booking.id}`);
+    revalidatePath(`/sessions/${booking.id}/chat`);
+    revalidatePath(`/listener/sessions/${booking.id}`);
+    revalidatePath(`/listener/sessions/${booking.id}/chat`);
+
+    if (listenerSlug) {
+      revalidatePath(`/explore/${listenerSlug}`);
+      revalidatePath(`/explore/${listenerSlug}/book`);
+      revalidatePath(`/explore/${listenerSlug}/connect`);
+    }
 
     return NextResponse.json(
       { bookingId: booking.id },
@@ -58,6 +73,6 @@ export async function POST(request: Request) {
       }
     );
   } catch (error) {
-    return jsonError(error instanceof Error ? error.message : "We could not create that booking.", 400);
+    return jsonError(error instanceof Error ? error.message : "We could not send that request.", 400);
   }
 }

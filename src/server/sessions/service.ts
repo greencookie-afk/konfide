@@ -1,8 +1,7 @@
 import "server-only";
-import type { SessionStatus } from "@/generated/prisma";
-import { SESSION_DURATION_OPTIONS } from "@/server/availability/types";
+import type { Prisma, SessionPaymentStatus, SessionStatus } from "@/generated/prisma";
+import { getDefaultListenerSettings } from "@/server/availability/service";
 import { prisma } from "@/server/db/client";
-import { getBookableCalendarForListener } from "@/server/availability/service";
 
 export type SessionCard = {
   id: string;
@@ -11,20 +10,150 @@ export type SessionCard = {
   headline: string;
   scheduledAt: Date;
   durationMinutes: number;
-  totalAmountCents: number;
   status: SessionStatus;
+  paymentStatus: SessionPaymentStatus;
   topic: string | null;
+  createdAt: Date;
+  acceptedAt: Date | null;
 };
 
-function isBookableTime(iso: string, calendar: Awaited<ReturnType<typeof getBookableCalendarForListener>>) {
-  return calendar.dates.some((date) => date.times.some((time) => time.iso === iso));
+export type SessionDetail = {
+  id: string;
+  scheduledAt: Date;
+  durationMinutes: number;
+  status: SessionStatus;
+  paymentStatus: SessionPaymentStatus;
+  createdAt: Date;
+  acceptedAt: Date | null;
+  topic: string | null;
+  notes: string | null;
+  talker: {
+    id: string;
+    name: string;
+    avatarUrl: string | null;
+    email: string;
+  };
+  listener: {
+    id: string;
+    name: string;
+    avatarUrl: string | null;
+    headline: string;
+    slug: string | null;
+  };
+};
+
+export type SessionTimingSnapshot = {
+  startsAt: Date;
+  opensAt: Date;
+  endsAt: Date;
+  isJoinWindowOpen: boolean;
+  isUpcoming: boolean;
+};
+
+type SessionDetailRecord = Prisma.SessionBookingGetPayload<{
+  include: {
+    talker: {
+      select: {
+        id: true;
+        name: true;
+        avatarUrl: true;
+        email: true;
+      };
+    };
+    listener: {
+      select: {
+        id: true;
+        name: true;
+        avatarUrl: true;
+        listenerProfile: {
+          select: {
+            headline: true;
+            slug: true;
+          };
+        };
+      };
+    };
+  };
+}>;
+
+function addMinutes(date: Date, amount: number) {
+  return new Date(date.getTime() + amount * 60_000);
 }
 
-export async function createSessionBooking(input: {
+function mapSessionDetail(session: SessionDetailRecord): SessionDetail {
+  return {
+    id: session.id,
+    scheduledAt: session.scheduledAt,
+    durationMinutes: session.durationMinutes,
+    status: session.status,
+    paymentStatus: session.paymentStatus,
+    createdAt: session.createdAt,
+    acceptedAt: session.paidAt,
+    topic: session.topic,
+    notes: session.notes,
+    talker: {
+      id: session.talker.id,
+      name: session.talker.name ?? "Konfide member",
+      avatarUrl: session.talker.avatarUrl,
+      email: session.talker.email,
+    },
+    listener: {
+      id: session.listener.id,
+      name: session.listener.name ?? "Listener",
+      avatarUrl: session.listener.avatarUrl,
+      headline: session.listener.listenerProfile?.headline ?? "Listener session",
+      slug: session.listener.listenerProfile?.slug ?? null,
+    },
+  };
+}
+
+export function getSessionConnectionLabel(paymentStatus: SessionPaymentStatus) {
+  if (paymentStatus === "PAID") {
+    return "Connected";
+  }
+
+  if (paymentStatus === "FAILED") {
+    return "Declined";
+  }
+
+  if (paymentStatus === "REFUNDED") {
+    return "Closed";
+  }
+
+  return "Waiting for listener";
+}
+
+export function isSessionRequestPending(input: Pick<SessionDetail | SessionCard, "paymentStatus">) {
+  return input.paymentStatus !== "PAID";
+}
+
+export function getSessionTimingSnapshot(
+  session: Pick<SessionDetail | SessionCard, "scheduledAt" | "durationMinutes" | "status" | "paymentStatus">
+): SessionTimingSnapshot {
+  const now = new Date();
+  const startsAt = session.scheduledAt;
+  const opensAt = addMinutes(startsAt, -10);
+  const endsAt = addMinutes(startsAt, session.durationMinutes);
+  const isConnected = session.paymentStatus === "PAID";
+
+  return {
+    startsAt,
+    opensAt,
+    endsAt,
+    isJoinWindowOpen: isConnected && session.status === "CONFIRMED" && now >= opensAt && now <= endsAt,
+    isUpcoming: isConnected && session.status === "CONFIRMED" && startsAt > now,
+  };
+}
+
+export function isSessionLive(
+  session: Pick<SessionDetail | SessionCard, "scheduledAt" | "durationMinutes" | "status" | "paymentStatus">
+) {
+  return getSessionTimingSnapshot(session).endsAt > new Date() && session.paymentStatus === "PAID" && session.status === "CONFIRMED";
+}
+
+export async function createConversationRequest(input: {
   talkerId: string;
   listenerSlug: string;
-  scheduledAtIso: string;
-  durationMinutes: number;
   topic?: string;
   notes?: string;
 }) {
@@ -53,45 +182,84 @@ export async function createSessionBooking(input: {
     },
   });
 
-  if (!listener || !listener.user.listenerSettings || !listener.ratePerMinuteCents) {
-    throw new Error("This listener is not ready to accept bookings yet.");
+  if (!listener) {
+    throw new Error("This listener is not available right now.");
   }
 
   if (listener.user.id === input.talkerId) {
-    throw new Error("You cannot book a session with your own listener account.");
+    throw new Error("You cannot start a chat with your own listener account.");
   }
 
-  const scheduledAt = new Date(input.scheduledAtIso);
+  const existingPendingRequest = await prisma.sessionBooking.findFirst({
+    where: {
+      talkerId: input.talkerId,
+      listenerId: listener.user.id,
+      status: "CONFIRMED",
+      paymentStatus: {
+        in: ["UNPAID", "PENDING"],
+      },
+    },
+    select: {
+      id: true,
+    },
+  });
 
-  if (Number.isNaN(scheduledAt.getTime())) {
-    throw new Error("Choose a valid booking time.");
+  if (existingPendingRequest) {
+    throw new Error("You already have a request waiting for this listener.");
   }
 
-  if (scheduledAt <= new Date()) {
-    throw new Error("Choose a future booking time.");
-  }
-
-  if (!SESSION_DURATION_OPTIONS.includes(input.durationMinutes as (typeof SESSION_DURATION_OPTIONS)[number])) {
-    throw new Error("Choose a supported session duration.");
-  }
-
-  const calendar = await getBookableCalendarForListener(listener.user.id, input.durationMinutes);
-
-  if (!isBookableTime(scheduledAt.toISOString(), calendar)) {
-    throw new Error("That booking time is no longer available.");
-  }
+  const settings = listener.user.listenerSettings ?? getDefaultListenerSettings();
 
   return prisma.sessionBooking.create({
     data: {
       talkerId: input.talkerId,
       listenerId: listener.user.id,
-      scheduledAt,
-      durationMinutes: input.durationMinutes,
+      scheduledAt: new Date(),
+      durationMinutes: settings.defaultSessionMinutes,
       topic: input.topic?.trim() || null,
       notes: input.notes?.trim() || null,
-      ratePerMinuteCents: listener.ratePerMinuteCents,
-      totalAmountCents: listener.ratePerMinuteCents * input.durationMinutes,
+      ratePerMinuteCents: listener.ratePerMinuteCents ?? 0,
+      totalAmountCents: 0,
       status: "CONFIRMED",
+      paymentStatus: "PENDING",
+    },
+  });
+}
+
+export async function acceptConversationRequest(listenerId: string, sessionId: string) {
+  const session = await prisma.sessionBooking.findFirst({
+    where: {
+      id: sessionId,
+      listenerId,
+    },
+    select: {
+      id: true,
+      paymentStatus: true,
+    },
+  });
+
+  if (!session) {
+    throw new Error("That request was not found.");
+  }
+
+  if (session.paymentStatus === "PAID") {
+    return session;
+  }
+
+  const acceptedAt = new Date();
+
+  return prisma.sessionBooking.update({
+    where: {
+      id: sessionId,
+    },
+    data: {
+      paymentStatus: "PAID",
+      paidAt: acceptedAt,
+      scheduledAt: acceptedAt,
+    },
+    select: {
+      id: true,
+      paymentStatus: true,
     },
   });
 }
@@ -115,7 +283,7 @@ export async function getTalkerSessions(talkerId: string): Promise<SessionCard[]
       },
     },
     orderBy: {
-      scheduledAt: "asc",
+      createdAt: "desc",
     },
   });
 
@@ -126,9 +294,11 @@ export async function getTalkerSessions(talkerId: string): Promise<SessionCard[]
     headline: session.listener.listenerProfile?.headline ?? "Listener session",
     scheduledAt: session.scheduledAt,
     durationMinutes: session.durationMinutes,
-    totalAmountCents: session.totalAmountCents,
     status: session.status,
+    paymentStatus: session.paymentStatus,
     topic: session.topic,
+    createdAt: session.createdAt,
+    acceptedAt: session.paidAt,
   }));
 }
 
@@ -155,7 +325,7 @@ export async function getListenerSessions(listenerId: string): Promise<SessionCa
       },
     },
     orderBy: {
-      scheduledAt: "asc",
+      createdAt: "desc",
     },
   });
 
@@ -166,14 +336,84 @@ export async function getListenerSessions(listenerId: string): Promise<SessionCa
     headline: session.listener.listenerProfile?.headline ?? "Listener session",
     scheduledAt: session.scheduledAt,
     durationMinutes: session.durationMinutes,
-    totalAmountCents: session.totalAmountCents,
     status: session.status,
+    paymentStatus: session.paymentStatus,
     topic: session.topic,
+    createdAt: session.createdAt,
+    acceptedAt: session.paidAt,
   }));
 }
 
+export async function getTalkerSessionDetail(talkerId: string, sessionId: string): Promise<SessionDetail | null> {
+  const session = await prisma.sessionBooking.findFirst({
+    where: {
+      id: sessionId,
+      talkerId,
+    },
+    include: {
+      talker: {
+        select: {
+          id: true,
+          name: true,
+          avatarUrl: true,
+          email: true,
+        },
+      },
+      listener: {
+        select: {
+          id: true,
+          name: true,
+          avatarUrl: true,
+          listenerProfile: {
+            select: {
+              headline: true,
+              slug: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  return session ? mapSessionDetail(session) : null;
+}
+
+export async function getListenerSessionDetail(listenerId: string, sessionId: string): Promise<SessionDetail | null> {
+  const session = await prisma.sessionBooking.findFirst({
+    where: {
+      id: sessionId,
+      listenerId,
+    },
+    include: {
+      talker: {
+        select: {
+          id: true,
+          name: true,
+          avatarUrl: true,
+          email: true,
+        },
+      },
+      listener: {
+        select: {
+          id: true,
+          name: true,
+          avatarUrl: true,
+          listenerProfile: {
+            select: {
+              headline: true,
+              slug: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  return session ? mapSessionDetail(session) : null;
+}
+
 export async function getListenerDashboardData(listenerId: string) {
-  const [profileData, settings, slots, sessions] = await Promise.all([
+  const [profileData, settings, sessions] = await Promise.all([
     prisma.user.findUnique({
       where: {
         id: listenerId,
@@ -189,48 +429,37 @@ export async function getListenerDashboardData(listenerId: string) {
         userId: listenerId,
       },
     }),
-    prisma.listenerAvailabilitySlot.findMany({
-      where: {
-        listenerId,
-      },
-      orderBy: [{ dayOfWeek: "asc" }, { startMinute: "asc" }],
-    }),
     prisma.sessionBooking.findMany({
       where: {
         listenerId,
       },
+      include: {
+        talker: {
+          select: {
+            name: true,
+          },
+        },
+      },
       orderBy: {
-        scheduledAt: "asc",
+        createdAt: "desc",
       },
     }),
   ]);
 
-  const completedSessions = sessions.filter((session) => session.status === "COMPLETED");
-  const upcomingSessions = sessions.filter((session) => session.status === "CONFIRMED" && session.scheduledAt >= new Date());
-  const profileFields = [
-    Boolean(profileData?.name),
-    Boolean(profileData?.avatarUrl),
-    Boolean(profileData?.listenerProfile?.slug),
-    Boolean(profileData?.listenerProfile?.headline),
-    Boolean(profileData?.listenerProfile?.about),
-    Boolean(profileData?.listenerProfile?.ratePerMinuteCents),
-    Boolean(profileData?.listenerProfile?.specialties.length),
-    Boolean(slots.length),
-  ];
-  const profileCompletion = Math.round((profileFields.filter(Boolean).length / profileFields.length) * 100);
-  const availabilityDays = new Set(slots.map((slot) => slot.dayOfWeek)).size;
+  const pendingRequests = sessions.filter((session) => session.paymentStatus !== "PAID");
+  const activeSessions = sessions.filter((session) => isSessionLive(session));
+  const recentSessions = sessions.filter((session) => session.paymentStatus === "PAID" && !isSessionLive(session)).slice(0, 3);
 
   return {
     name: profileData?.name ?? "Listener",
     avatarUrl: profileData?.avatarUrl ?? null,
     profile: profileData?.listenerProfile ?? null,
     settings,
-    availabilityDays,
-    totalEarningsCents: completedSessions.reduce((sum, session) => sum + session.totalAmountCents, 0),
-    completedSessionsCount: completedSessions.length,
-    upcomingSessionsCount: upcomingSessions.length,
-    upcomingSessions: upcomingSessions.slice(0, 3),
-    recentCompletedSessions: completedSessions.slice(-3).reverse(),
-    profileCompletion,
+    pendingRequestsCount: pendingRequests.length,
+    activeSessionsCount: activeSessions.length,
+    totalConnectionsCount: sessions.filter((session) => session.paymentStatus === "PAID").length,
+    pendingRequests: pendingRequests.slice(0, 4),
+    activeSessions: activeSessions.slice(0, 3),
+    recentSessions,
   };
 }

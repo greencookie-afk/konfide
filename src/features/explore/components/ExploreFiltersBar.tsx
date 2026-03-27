@@ -4,9 +4,8 @@ import { buildExploreHref } from "@/features/explore/components/exploreHref";
 import type { BrowseListenersFilters, ListenerSort } from "@/server/listeners/types";
 
 const SORT_OPTIONS: Array<{ value: ListenerSort; label: string }> = [
-  { value: "soonest", label: "Soonest opening" },
-  { value: "price-low", label: "Lowest rate" },
-  { value: "price-high", label: "Highest rate" },
+  { value: "recent", label: "Recently active" },
+  { value: "name", label: "Name" },
 ];
 
 type ExploreFiltersBarProps = {

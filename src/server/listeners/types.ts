@@ -1,6 +1,6 @@
 export const LISTENER_PAGE_SIZE = 4;
 
-export const LISTENER_SORTS = ["soonest", "price-low", "price-high"] as const;
+export const LISTENER_SORTS = ["recent", "name"] as const;
 
 export type ListenerSort = (typeof LISTENER_SORTS)[number];
 
@@ -19,18 +19,13 @@ export type ListenerSummary = {
   avatarUrl: string | null;
   headline: string;
   about: string;
-  ratePerMinuteCents: number;
-  defaultSessionMinutes: number;
   specialties: string[];
   languages: string[];
-  timezone: string;
-  acceptingNewBookings: boolean;
-  nextAvailableAt: string | null;
+  isAvailableNow: boolean;
 };
 
 export type ListenerDetail = ListenerSummary & {
   isPublished: boolean;
-  availabilityDayCount: number;
 };
 
 export type BrowseListenersResult = {
@@ -44,10 +39,10 @@ export type BrowseListenersResult = {
 export type ListenerProfileEditorData = {
   name: string;
   avatarUrl: string | null;
+  isAvailableNow: boolean;
   slug: string;
   headline: string;
   about: string;
-  ratePerMinuteCents: number | null;
   specialties: string[];
   languages: string[];
   isPublished: boolean;

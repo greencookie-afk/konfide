@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { CalendarDays, LayoutDashboard, MessageCircleHeart, NotebookPen, SlidersHorizontal } from "lucide-react";
+import { CircleDot, LayoutDashboard, MessageCircleHeart, NotebookPen, SlidersHorizontal } from "lucide-react";
 import Footer from "@/components/shared/Footer";
 import Navbar from "@/components/shared/Navbar";
 
@@ -20,8 +20,8 @@ export default function JoinPage() {
                 Support people with a <br /> <span className="text-primary">profile you control</span>
               </h1>
               <p className="mb-6 max-w-md text-base font-light leading-relaxed text-on-surface-variant">
-                Create a listener account, write your public profile, set your weekly availability, and publish when
-                you are ready to accept bookings.
+                Create a listener account, write your public profile, turn on your live availability, and accept
+                requests when you are ready to connect.
               </p>
               <div className="flex flex-col gap-4 sm:flex-row">
                 <Link
@@ -61,11 +61,11 @@ export default function JoinPage() {
             <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
               <div className="space-y-4">
                 <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary-container/30">
-                  <CalendarDays className="h-7 w-7 text-primary" />
+                  <CircleDot className="h-7 w-7 text-primary" />
                 </div>
-                <h3 className="text-xl font-bold tracking-tight">Set your own schedule</h3>
+                <h3 className="text-xl font-bold tracking-tight">Go live when you want</h3>
                 <p className="leading-relaxed text-on-surface-variant">
-                  Add weekly availability in 15-minute blocks and pause new bookings anytime.
+                  One availability switch controls whether people can discover you and send new requests.
                 </p>
               </div>
               <div className="space-y-4">
@@ -81,9 +81,9 @@ export default function JoinPage() {
                 <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary-container/30">
                   <LayoutDashboard className="h-7 w-7 text-primary" />
                 </div>
-                <h3 className="text-xl font-bold tracking-tight">See real session activity</h3>
+                <h3 className="text-xl font-bold tracking-tight">Accept and start chatting</h3>
                 <p className="leading-relaxed text-on-surface-variant">
-                  Upcoming sessions, completed sessions, and earnings update from actual bookings instead of demo data.
+                  Incoming requests appear in your workspace, and the conversation begins as soon as you accept.
                 </p>
               </div>
             </div>
@@ -96,8 +96,8 @@ export default function JoinPage() {
           <div className="mx-auto mb-12 max-w-2xl text-center">
             <h2 className="mb-3 text-2xl font-bold tracking-tight md:text-3xl">Three real steps to go live</h2>
             <p className="text-sm text-on-surface-variant md:text-base">
-              No interview placeholders here. The current flow is simple: create your account, finish your profile,
-              then set availability.
+              Create your account, finish your public profile, then turn on availability when you want to accept live
+              requests.
             </p>
           </div>
 
@@ -123,7 +123,7 @@ export default function JoinPage() {
                 </div>
                 <h3 className="mb-2 text-lg font-bold tracking-tight">Build your public profile</h3>
                 <p className="text-sm leading-relaxed text-on-surface-variant">
-                  Add your slug, headline, about section, specialties, languages, and rate from the listener dashboard.
+                  Add your slug, headline, about section, specialties, and languages from the listener dashboard.
                 </p>
               </div>
             </div>
@@ -134,9 +134,9 @@ export default function JoinPage() {
                 <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-surface-container text-on-surface-variant">
                   <SlidersHorizontal className="h-5 w-5" />
                 </div>
-                <h3 className="mb-2 text-lg font-bold tracking-tight">Set availability and publish</h3>
+                <h3 className="mb-2 text-lg font-bold tracking-tight">Turn on availability</h3>
                 <p className="text-sm leading-relaxed text-on-surface-variant">
-                  Add your weekly time blocks, turn bookings on, and publish when you want to appear in browse.
+                  Use the single availability switch to appear in browse and start receiving live requests.
                 </p>
               </div>
             </div>
@@ -147,7 +147,7 @@ export default function JoinPage() {
           <div className="mx-auto max-w-3xl">
             <h2 className="mb-4 text-3xl font-bold tracking-tight md:text-4xl">Ready to set up your listing?</h2>
             <p className="mb-8 text-base font-light text-surface/75 md:text-lg">
-              Create the account now. You can add rate, profile details, and availability at your own pace.
+              Create the account now. You can build your profile and turn on availability at your own pace.
             </p>
             <Link
               href="/auth?mode=signup&role=listen"
