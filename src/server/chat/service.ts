@@ -1,5 +1,6 @@
 import "server-only";
 import type { SessionStatus, UserRole } from "@/generated/prisma";
+import { decryptChatBodyForDisplay, encryptChatBody, isEncryptedChatBody } from "@/server/chat/encryption";
 import { prisma } from "@/server/db/client";
 import { isSessionRequestPending } from "@/server/sessions/service";
 
@@ -34,7 +35,7 @@ function mapMessage(message: {
 }): SessionChatMessageView {
   return {
     id: message.id,
-    body: message.body,
+    body: decryptChatBodyForDisplay(message.body),
     createdAt: message.createdAt,
     sender: {
       id: message.sender.id,
@@ -43,6 +44,27 @@ function mapMessage(message: {
       role: message.sender.role,
     },
   };
+}
+
+async function migrateLegacySessionMessages(messages: Array<{ id: string; body: string }>) {
+  const legacyMessages = messages.filter((message) => !isEncryptedChatBody(message.body));
+
+  if (!legacyMessages.length) {
+    return;
+  }
+
+  await prisma.$transaction(
+    legacyMessages.map((message) =>
+      prisma.sessionChatMessage.update({
+        where: {
+          id: message.id,
+        },
+        data: {
+          body: encryptChatBody(message.body),
+        },
+      })
+    )
+  );
 }
 
 async function getParticipantSession(sessionId: string, userId: string) {
@@ -114,6 +136,8 @@ export async function getSessionChatStateForUser(sessionId: string, userId: stri
     status: session.status,
   });
 
+  await migrateLegacySessionMessages(session.messages);
+
   return {
     messages: session.messages.map(mapMessage),
     canSend: access.canSend,
@@ -151,7 +175,7 @@ export async function createSessionChatMessage(input: { sessionId: string; userI
     data: {
       sessionId: session.id,
       senderId: input.userId,
-      body,
+      body: encryptChatBody(body),
     },
     include: {
       sender: {

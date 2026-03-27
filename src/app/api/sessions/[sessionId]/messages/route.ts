@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSessionUserFromRequest } from "@/server/auth/service";
 import { createSessionChatMessage, getSessionChatStateForUser } from "@/server/chat/service";
+import { getUntrustedOriginMessage, isTrustedMutationOrigin } from "@/server/security/origin";
 
 function jsonError(message: string, status: number) {
   return NextResponse.json(
@@ -42,6 +43,10 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ sessionId: string }> }
 ) {
+  if (!isTrustedMutationOrigin(request)) {
+    return jsonError(getUntrustedOriginMessage(), 403);
+  }
+
   const user = await getSessionUserFromRequest(request);
 
   if (!user) {
@@ -56,12 +61,16 @@ export async function POST(
     return jsonError("Invalid chat request.", 400);
   }
 
+  if (typeof payload.body !== "string") {
+    return jsonError("Write a message before sending.", 400);
+  }
+
   try {
     const { sessionId } = await params;
     const created = await createSessionChatMessage({
       sessionId,
       userId: user.id,
-      body: payload.body ?? "",
+      body: payload.body,
     });
 
     return NextResponse.json(created, {

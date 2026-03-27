@@ -1,6 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { getSessionUserFromRequest } from "@/server/auth/service";
+import { getUntrustedOriginMessage, isTrustedMutationOrigin } from "@/server/security/origin";
 import { acceptConversationRequest } from "@/server/sessions/service";
 
 function jsonError(message: string, status: number) {
@@ -19,6 +20,10 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ sessionId: string }> }
 ) {
+  if (!isTrustedMutationOrigin(request)) {
+    return jsonError(getUntrustedOriginMessage(), 403);
+  }
+
   const user = await getSessionUserFromRequest(request);
 
   if (!user) {

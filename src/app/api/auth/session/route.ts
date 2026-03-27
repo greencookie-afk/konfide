@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSessionUserFromRequest, sanitizeUser, signOutUser } from "@/server/auth/service";
+import { getUntrustedOriginMessage, isTrustedMutationOrigin } from "@/server/security/origin";
 
 export async function GET(request: Request) {
   const user = await getSessionUserFromRequest(request);
@@ -17,6 +18,13 @@ export async function GET(request: Request) {
   );
 }
 
-export async function DELETE() {
+export async function DELETE(request: Request) {
+  if (!isTrustedMutationOrigin(request)) {
+    return NextResponse.json(
+      { error: getUntrustedOriginMessage() },
+      { status: 403, headers: { "Cache-Control": "no-store" } }
+    );
+  }
+
   return signOutUser();
 }

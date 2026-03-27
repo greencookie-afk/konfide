@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { Prisma } from "@/generated/prisma";
 import { enforceRateLimit, getRequestFingerprint } from "@/server/auth/rate-limit";
+import { getUntrustedOriginMessage, isTrustedMutationOrigin } from "@/server/security/origin";
 import { signUpUser } from "@/server/auth/service";
 
 function isSchemaMismatchError(error: unknown) {
@@ -20,6 +21,13 @@ function isDatabaseConfigurationError(error: unknown) {
 
 export async function POST(request: Request) {
   try {
+    if (!isTrustedMutationOrigin(request)) {
+      return NextResponse.json(
+        { error: getUntrustedOriginMessage() },
+        { status: 403, headers: { "Cache-Control": "no-store" } }
+      );
+    }
+
     let payload: Record<string, string | undefined>;
 
     try {

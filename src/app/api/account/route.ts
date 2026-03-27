@@ -2,6 +2,7 @@ import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { getSessionUserFromRequest } from "@/server/auth/service";
 import { updateAccountEditorData } from "@/server/account/service";
+import { getUntrustedOriginMessage, isTrustedMutationOrigin } from "@/server/security/origin";
 
 function jsonError(message: string, status: number) {
   return NextResponse.json(
@@ -16,6 +17,10 @@ function jsonError(message: string, status: number) {
 }
 
 export async function PUT(request: Request) {
+  if (!isTrustedMutationOrigin(request)) {
+    return jsonError(getUntrustedOriginMessage(), 403);
+  }
+
   const user = await getSessionUserFromRequest(request);
 
   if (!user) {

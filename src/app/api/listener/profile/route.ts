@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSessionUserFromRequest } from "@/server/auth/service";
+import { getUntrustedOriginMessage, isTrustedMutationOrigin } from "@/server/security/origin";
 import { saveListenerProfile } from "@/server/listeners/service";
 
 function jsonError(message: string, status: number) {
@@ -15,6 +16,10 @@ function jsonError(message: string, status: number) {
 }
 
 export async function PUT(request: Request) {
+  if (!isTrustedMutationOrigin(request)) {
+    return jsonError(getUntrustedOriginMessage(), 403);
+  }
+
   const user = await getSessionUserFromRequest(request);
 
   if (!user) {
